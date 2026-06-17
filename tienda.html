@@ -189,7 +189,7 @@
     <div class="cabecera">
         <img src="logojari.png" alt="Distribuidora Automotriz JARI">
         <h1>Catálogo de <span>Productos</span></h1>
-        <div class="buscador"><input type="text" id="buscar" placeholder="🔎 Buscar por nombre o código..." oninput="render()"></div>
+        <div class="buscador"><input type="text" id="buscar" placeholder="🔎 Buscar por código, nombre o descripción..." oninput="render()"></div>
     </div>
 
     <div class="estado-carga" id="estadoCarga">Cargando productos...</div>
@@ -369,11 +369,15 @@
             var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
             var html = '';
             PRODUCTOS.forEach(function (p) {
-                if (q && (String(p.nombre).toLowerCase().indexOf(q) < 0 &&
-                          String(p.codigo).toLowerCase().indexOf(q) < 0)) return;
+                if (q) {
+                    var enNombre = String(p.nombre || '').toLowerCase().indexOf(q) >= 0;
+                    var enCodigo = String(p.codigo || '').toLowerCase().indexOf(q) >= 0;
+                    var enDesc   = String(p.descripcion || '').toLowerCase().indexOf(q) >= 0;
+                    if (!enNombre && !enCodigo && !enDesc) return;
+                }
                 html += tarjeta(p);
             });
-            document.getElementById('catalogo').innerHTML = html;
+            document.getElementById('catalogo').innerHTML = html || '<p style="padding:20px;color:#778;">Sin resultados para "' + q + '".</p>';
             // divisorCatalogo siempre visible (se muestra desde HTML)
         }
 
