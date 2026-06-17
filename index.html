@@ -411,7 +411,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     if (res.ok) {
-                        sessionStorage.setItem('jari_cliente', JSON.stringify({ numero: num, nombre: res.nombre }));
+                        sessionStorage.setItem('jari_cliente', JSON.stringify({ numero: num, nombre: res.nombre, perfil: res.perfil || '' }));
                         window.location.href = 'tienda.html';
                     } else {
                         aviso.style.color = '#ffb3b6';

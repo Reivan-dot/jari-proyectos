@@ -38,10 +38,20 @@
 
         .estado-carga { text-align:center; padding:50px 20px; color:#667; font-size:1.05rem; }
 
+        /* ===== SECCIONES (vuelve a pedir / sugeridos) ===== */
+        .seccion { max-width:1180px; margin: 28px auto 0; padding: 0 20px; }
+        .seccion[hidden] { display:none; }
+        .seccion-titulo { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; font-size:1.15rem; display:flex; align-items:center; gap:10px; }
+        .seccion-titulo:before { content:''; width:6px; height:22px; background:var(--rojo); border-radius:3px; }
+        .seccion-sub { font-size:.8rem; color:#778; font-weight:300; margin:3px 0 0 16px; }
+        .fila { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:18px; margin-top:14px; }
+        .divisor { max-width:1180px; margin:30px auto 0; padding:0 20px; }
+        .divisor hr { border:none; border-top:1px dashed #cfd4e8; }
+
         /* ===== GRID DE PRODUCTOS ===== */
         .catalogo {
             display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 18px; max-width: 1180px; margin: 20px auto 130px; padding: 0 20px;
+            gap: 18px; max-width: 1180px; margin: 14px auto 130px; padding: 0 20px;
         }
         .card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 6px 16px rgba(27,36,86,.10); display:flex; flex-direction:column; }
         .card img { width:100%; height:170px; object-fit:contain; background:#fafafa; padding:10px; }
@@ -91,6 +101,24 @@
     </div>
 
     <div class="estado-carga" id="estadoCarga">Cargando productos...</div>
+
+    <!-- SECCIÓN: Vuelve a pedir (lo que ya pidió antes) -->
+    <div class="seccion" id="secPedidos" hidden>
+        <div class="seccion-titulo">🔁 Vuelve a pedir</div>
+        <div class="seccion-sub">Productos que ya has pedido antes.</div>
+        <div class="fila" id="filaPedidos"></div>
+    </div>
+
+    <!-- SECCIÓN: Sugeridos para ti (por perfil) -->
+    <div class="seccion" id="secSugeridos" hidden>
+        <div class="seccion-titulo">✨ Sugeridos para ti</div>
+        <div class="seccion-sub">Seleccionados según tu perfil de cliente.</div>
+        <div class="fila" id="filaSugeridos"></div>
+    </div>
+
+    <div class="divisor" id="divisorCatalogo" hidden><hr></div>
+
+    <!-- Catálogo completo -->
     <div class="catalogo" id="catalogo"></div>
 
     <!-- Barra inferior: resumen + enviar pedido -->
@@ -123,10 +151,12 @@
             document.getElementById('numeroCliente').textContent = 'Cliente N° ' + cliente.numero;
         }
 
-        var PRODUCTOS = [];
-        var CANT = {}; // cantidades por código (se conservan al buscar)
+        var PRODUCTOS = [];        // catálogo completo
+        var POR_CODIGO = {};       // índice rápido { codigo: producto }
+        var CANT = {};             // cantidades por código (se conservan al buscar)
 
         function fmt(n) { return n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
 
         /* =================== CARGAR CATÁLOGO =================== */
         fetch(SCRIPT_URL + '?accion=catalogo')
@@ -138,50 +168,106 @@
             .catch(function () { PRODUCTOS = FALLBACK; arrancar(); });
 
         function arrancar() {
+            POR_CODIGO = {};
+            PRODUCTOS.forEach(function (p) { POR_CODIGO[String(p.codigo)] = p; });
             document.getElementById('estadoCarga').style.display = 'none';
             render();
+            cargarSugeridos();
+            cargarPedidos();
         }
 
-        /* =================== DIBUJAR CATÁLOGO (con buscador) =================== */
+        /* =================== TARJETA DE PRODUCTO (reutilizable) =================== */
+        function tarjeta(p) {
+            var cant = CANT[p.codigo] || 0;
+            return '' +
+                '<div class="card">' +
+                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25">' +
+                    '<div class="info">' +
+                        '<span class="cod">CÓDIGO: ' + esc(p.codigo) + '</span>' +
+                        '<h3>' + esc(p.nombre) + '</h3>' +
+                        '<p class="desc">' + esc(p.descripcion || '') + '</p>' +
+                        '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + esc(p.medida) + '</span></div>' +
+                        '<div class="qty">' +
+                            '<button onclick="cambiar(\'' + esc(p.codigo) + '\',-1)">−</button>' +
+                            '<input type="number" min="0" data-cod="' + esc(p.codigo) + '" value="' + cant + '" ' +
+                                   'onchange="setCant(\'' + esc(p.codigo) + '\',this.value)" ' +
+                                   'oninput="setCant(\'' + esc(p.codigo) + '\',this.value)">' +
+                            '<button onclick="cambiar(\'' + esc(p.codigo) + '\',1)">+</button>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        /* =================== CATÁLOGO COMPLETO (con buscador) =================== */
         function render() {
             var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
-            var cont = document.getElementById('catalogo');
-            cont.innerHTML = '';
+            var html = '';
             PRODUCTOS.forEach(function (p) {
                 if (q && (String(p.nombre).toLowerCase().indexOf(q) < 0 &&
                           String(p.codigo).toLowerCase().indexOf(q) < 0)) return;
-                var cant = CANT[p.codigo] || 0;
-                var card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML =
-                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + p.nombre + '" onerror="this.style.opacity=.25">' +
-                    '<div class="info">' +
-                        '<span class="cod">CÓDIGO: ' + p.codigo + '</span>' +
-                        '<h3>' + p.nombre + '</h3>' +
-                        '<p class="desc">' + (p.descripcion || '') + '</p>' +
-                        '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + p.medida + '</span></div>' +
-                        '<div class="qty">' +
-                            '<button onclick="cambiar(\'' + p.codigo + '\',-1)">−</button>' +
-                            '<input type="number" min="0" value="' + cant + '" ' +
-                                   'onchange="setCant(\'' + p.codigo + '\',this.value)" ' +
-                                   'oninput="setCant(\'' + p.codigo + '\',this.value)">' +
-                            '<button onclick="cambiar(\'' + p.codigo + '\',1)">+</button>' +
-                        '</div>' +
-                    '</div>';
-                cont.appendChild(card);
+                html += tarjeta(p);
             });
+            document.getElementById('catalogo').innerHTML = html;
+            document.getElementById('divisorCatalogo').hidden = false;
         }
 
+        /* =================== SUGERIDOS POR PERFIL =================== */
+        function cargarSugeridos() {
+            var perfil = (cliente && cliente.perfil) ? cliente.perfil : '';
+            if (!perfil) return;
+            fetch(SCRIPT_URL + '?accion=sugerencias&perfil=' + encodeURIComponent(perfil))
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res.ok || !res.codigos || !res.codigos.length) return;
+                    pintarFila('filaSugeridos', 'secSugeridos', res.codigos);
+                })
+                .catch(function () {});
+        }
+
+        /* =================== VUELVE A PEDIR (historial) =================== */
+        function cargarPedidos() {
+            if (!cliente || !cliente.numero) return;
+            fetch(SCRIPT_URL + '?accion=pedidos&numero=' + encodeURIComponent(cliente.numero))
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res.ok || !res.codigos || !res.codigos.length) return;
+                    pintarFila('filaPedidos', 'secPedidos', res.codigos);
+                })
+                .catch(function () {});
+        }
+
+        // Dibuja una fila de productos a partir de una lista de códigos
+        function pintarFila(idFila, idSeccion, codigos) {
+            var html = '';
+            codigos.forEach(function (c) {
+                var p = POR_CODIGO[String(c).trim()];
+                if (p) html += tarjeta(p);
+            });
+            if (!html) return;
+            document.getElementById(idFila).innerHTML = html;
+            document.getElementById(idSeccion).hidden = false;
+        }
+
+        /* =================== CANTIDADES (compartidas en todas las secciones) =================== */
         function setCant(codigo, valor) {
             var v = parseInt(valor, 10); if (isNaN(v) || v < 0) v = 0;
             CANT[codigo] = v;
+            sincronizar();
             recalcular();
         }
         function cambiar(codigo, delta) {
             var v = (CANT[codigo] || 0) + delta; if (v < 0) v = 0;
             CANT[codigo] = v;
-            render();
+            sincronizar();
             recalcular();
+        }
+        // Un mismo producto puede aparecer en varias secciones: deja todas sus casillas iguales
+        function sincronizar() {
+            var inputs = document.querySelectorAll('input[data-cod]');
+            for (var i = 0; i < inputs.length; i++) {
+                var c = inputs[i].getAttribute('data-cod');
+                inputs[i].value = CANT[c] || 0;
+            }
         }
 
         function recalcular() {
@@ -196,17 +282,37 @@
             document.getElementById('btnPedido').disabled = (articulos === 0);
         }
 
+        /* =================== ENVIAR PEDIDO =================== */
         function enviarPedido() {
-            var lineas = [], total = 0;
+            var lineas = [], codigos = [], total = 0;
             PRODUCTOS.forEach(function (p) {
                 var v = CANT[p.codigo] || 0;
-                if (v > 0) { var sub = v * p.precio; total += sub;
-                    lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub)); }
+                if (v > 0) {
+                    var sub = v * p.precio; total += sub;
+                    lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub));
+                    codigos.push(p.codigo);
+                }
             });
             if (!lineas.length) return;
+
+            var detalle = lineas.join('\n');
             var msg = 'Hola, soy el cliente N° ' + cliente.numero + ' (' + cliente.nombre + ').\n' +
-                      'Quiero hacer este pedido:\n\n' + lineas.join('\n') +
+                      'Quiero hacer este pedido:\n\n' + detalle +
                       '\n\nTOTAL: $' + fmt(total) + ' ' + MONEDA;
+
+            // Guarda el pedido en Google (para el historial "Vuelve a pedir")
+            var datos = new URLSearchParams();
+            datos.append('accion', 'guardarPedido');
+            datos.append('numero', cliente.numero);
+            datos.append('nombre', cliente.nombre);
+            datos.append('detalle', detalle);
+            datos.append('total', total);
+            datos.append('codigos', codigos.join(', '));
+            fetch(SCRIPT_URL, { method: 'POST', body: datos })
+                .then(function () { cargarPedidos(); })
+                .catch(function () {});
+
+            // Abre WhatsApp con el pedido listo
             window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
         }
 

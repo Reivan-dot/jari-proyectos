@@ -61,3 +61,49 @@ puedes arrastrar **hasta 100 fotos por vez** y dar *Commit*. Repite por tandas.
 ## ¿Qué pasa si una foto falta?
 No hay problema: el producto se muestra igual, solo que su imagen aparece tenue.
 En cuanto subas esa foto con el nombre correcto, se verá sola.
+
+---
+
+## Parte C — "Vuelve a pedir" y "Sugeridos para ti"
+
+La tienda ahora muestra dos secciones extra arriba del catálogo:
+
+- **🔁 Vuelve a pedir:** los productos que ese cliente ya pidió antes.
+- **✨ Sugeridos para ti:** los productos del **perfil** que tú le asignes al cliente.
+
+Para que funcionen, configura lo siguiente (una sola vez):
+
+### 1) Pestaña `Pedidos` (se crea sola)
+No tienes que hacer nada: la primera vez que un cliente envíe un pedido por
+WhatsApp, se crea automáticamente una pestaña **`Pedidos`** que va guardando cada
+pedido (fecha, N° de cliente, detalle, total y códigos). De ahí salen los productos
+de **"Vuelve a pedir"**.
+
+### 2) Pestaña `Perfiles` (la llenas tú)
+Crea una pestaña nueva llamada exactamente **`Perfiles`** con estos títulos en la
+fila 1:
+
+| A | B |
+|---|---|
+| perfil | codigos |
+
+Debajo, escribe un perfil por fila y los códigos que quieres sugerir a ese perfil,
+**separados por coma**. Ejemplo:
+
+| perfil | codigos |
+|--------|---------|
+| Taller | 756, 668, 664 |
+| Mayoreo | 109469, 109503, 4 |
+| Tienda | 109521, 109529 |
+
+### 3) Columna `Perfil` en la hoja de Clientes
+En tu hoja de **Clientes**, en la columna **O** (la que sigue después de *Token*),
+escribe el nombre del perfil de cada cliente (por ejemplo `Taller`). Debe coincidir
+con un nombre de la pestaña `Perfiles`.
+
+> Cuando el cliente inicie sesión, verá en "Sugeridos para ti" justo los productos
+> del perfil que le asignaste. Si dejas su perfil en blanco, simplemente no se
+> muestra esa sección.
+
+Después de estos cambios, **vuelve a publicar el Apps Script** (Implementar →
+Administrar implementaciones → ✏️ Editar → Versión: Nueva versión → Implementar).
