@@ -33,9 +33,9 @@ function autorizar() {
 function asegurarEncabezados(hoja) {
   if (hoja.getLastRow() === 0) {
     hoja.appendRow([
-      'N° Cliente', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
+      'N° Usuario', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
       'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
-      'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil'
+      'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil', 'N° Cliente'
     ]);
   }
 }
@@ -68,11 +68,18 @@ function doPost(e) {
       if (!num || !pass) return json({ ok: false, error: 'Faltan datos.' });
       var ultimoL = hoja.getLastRow();
       if (ultimoL < 2) return json({ ok: false, error: 'Número o contraseña incorrectos.' });
-      // Lee hasta la columna O (15) = Perfil. (N°, fecha, nombre, correo, contraseña ... perfil)
-      var filasL = hoja.getRange(2, 1, ultimoL - 1, 15).getValues();
+      // Lee hasta la columna P (16) = N° Cliente (manual).
+      // Índices: 0=N°Usuario, 2=Nombre, 4=Contraseña, 6=Teléfono, 14=Perfil, 15=N° Cliente
+      var filasL = hoja.getRange(2, 1, ultimoL - 1, 16).getValues();
       for (var k = 0; k < filasL.length; k++) {
         if (String(filasL[k][0]) === String(num) && String(filasL[k][4]) === String(pass)) {
-          return json({ ok: true, nombre: filasL[k][2], perfil: String(filasL[k][14] || '') });
+          return json({
+            ok: true,
+            nombre: filasL[k][2],
+            perfil: String(filasL[k][14] || ''),
+            telefono: String(filasL[k][6] || ''),
+            numCliente: String(filasL[k][15] || '')
+          });
         }
       }
       return json({ ok: false, error: 'Número o contraseña incorrectos.' });
@@ -103,10 +110,10 @@ function doPost(e) {
       var numC = datos[0], nombreC = datos[2], passC = datos[4];
       MailApp.sendEmail({
         to: correoR,
-        subject: 'Tu número de cliente — Distribuidora Automotriz JARI',
+        subject: 'Tu número de usuario — Distribuidora Automotriz JARI',
         htmlBody:
           '<p>Hola ' + nombreC + ',</p>' +
-          '<p>Tu <b>número de cliente</b> es: <b>' + numC + '</b></p>' +
+          '<p>Tu <b>número de usuario</b> es: <b>' + numC + '</b></p>' +
           '<p>Tu <b>contraseña</b> es: <b>' + passC + '</b></p>' +
           '<p>— Distribuidora Automotriz JARI</p>'
       });
@@ -122,12 +129,13 @@ function doPost(e) {
       return json({ ok: false, error: 'Este correo ya está registrado. Usa otro o recupera tu número.' });
     }
 
-    var numCliente = 1000 + hoja.getLastRow(); // primer cliente = 1001
+    var numUsuario = 1000 + hoja.getLastRow(); // primer usuario = 1001
     var fecha = new Date();
     var token = Utilities.getUuid();
 
+    // El N° Cliente (columna P) se deja vacío: lo asigna el administrador a mano.
     hoja.appendRow([
-      numCliente, fecha, d.nombre || '', correo, d.password || '', 'No',
+      numUsuario, fecha, d.nombre || '', correo, d.password || '', 'No',
       d.telefono || '', d.direccion || '', d.cp || '', d.ciudad || '', d.estado || '',
       d.productos || '', d.esperas || '', token
     ]);
@@ -139,13 +147,13 @@ function doPost(e) {
       subject: 'Verifica tu correo — Distribuidora Automotriz JARI',
       htmlBody:
         '<p>Hola ' + (d.nombre || '') + ',</p>' +
-        '<p>Gracias por registrarte. Tu <b>número de cliente</b> es <b>' + numCliente + '</b>.</p>' +
+        '<p>Gracias por registrarte. Tu <b>número de usuario</b> es <b>' + numUsuario + '</b>.</p>' +
         '<p>Confirma tu correo haciendo clic aquí:</p>' +
         '<p><a href="' + urlVerif + '">✅ Verificar mi correo</a></p>' +
         '<p>— Distribuidora Automotriz JARI</p>'
     });
 
-    return json({ ok: true, numCliente: numCliente });
+    return json({ ok: true, numUsuario: numUsuario });
 
   } catch (err) {
     return json({ ok: false, error: String(err) });

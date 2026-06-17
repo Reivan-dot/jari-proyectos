@@ -232,7 +232,9 @@
             window.location.href = 'index.html#clientes';
         } else {
             document.getElementById('nombreCliente').childNodes[0].nodeValue = '👤 ' + cliente.nombre;
-            document.getElementById('numeroCliente').textContent = 'Cliente N° ' + cliente.numero;
+            var etiqueta = 'Usuario N° ' + cliente.numero;
+            if (cliente.numCliente) etiqueta += ' · Cliente N° ' + cliente.numCliente;
+            document.getElementById('numeroCliente').textContent = etiqueta;
         }
 
         var PRODUCTOS = [];        // catálogo completo
@@ -419,8 +421,12 @@
             if (!ped.items.length) { cancelarPedido(); return; }
 
             var detalle = ped.lineas.join('\n');
-            var msg = 'Hola, soy el cliente N° ' + cliente.numero + ' (' + cliente.nombre + ').\n' +
-                      'Quiero hacer este pedido:\n\n' + detalle +
+            var encabezado = 'Hola, quiero hacer este pedido:\n' +
+                      'N° Cliente: ' + (cliente.numCliente || '(sin asignar)') + '\n' +
+                      'N° Usuario: ' + cliente.numero + '\n' +
+                      'Nombre: ' + cliente.nombre + '\n' +
+                      'Teléfono: ' + (cliente.telefono || '(sin registrar)') + '\n\n';
+            var msg = encabezado + detalle +
                       '\n\nTOTAL: $' + fmt(ped.total) + ' ' + MONEDA;
 
             // Guarda el pedido en Google (para el historial "Vuelve a pedir")
