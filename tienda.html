@@ -217,6 +217,14 @@
         .flete-row.tot { border-bottom:none; border-top:2px solid #eef0f7; margin-top:4px; padding-top:12px; }
         .flete-row.tot b { font-size:1.5rem; color:var(--rojo); }
 
+        /* ===== BOTÓN VOLVER AL CATÁLOGO (desde una vista de ofertas) ===== */
+        .btn-volver {
+            background: var(--azul); color:#fff; border:none; border-radius:8px;
+            padding:9px 16px; margin-bottom:12px; cursor:pointer; font-family:'Oswald',sans-serif;
+            font-size:.82rem; letter-spacing:.5px; text-transform:uppercase;
+        }
+        .btn-volver:hover { background: var(--rojo); }
+
         /* ===== INFORMACIÓN DE PAGO ===== */
         .pago-dato { padding:11px 20px; border-bottom:1px solid #eef0f7; }
         .pago-dato .et { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:#889; }
@@ -253,9 +261,9 @@
 
     <!-- Barra de acciones: ofertas, Excel, envío, flete y pago -->
     <div class="barra-acciones" id="barraAcciones" hidden>
-        <button class="bacc bacc-of" onclick="irA('secRemates')">🔥 Remates</button>
-        <button class="bacc bacc-of" onclick="irA('secRelampago')">⚡ Ofertas relámpago</button>
-        <button class="bacc bacc-of" onclick="irA('secMes')">📅 Ofertas del mes</button>
+        <button class="bacc bacc-of" onclick="verOferta('remate')">🔥 Remates</button>
+        <button class="bacc bacc-of" onclick="verOferta('relampago')">⚡ Ofertas relámpago</button>
+        <button class="bacc bacc-of" onclick="verOferta('mes')">📅 Ofertas del mes</button>
         <span class="sep"></span>
         <button class="bacc" onclick="descargarPlantilla()">⬇ Plantilla Excel</button>
         <button class="bacc" onclick="document.getElementById('fileExcel').click()">📥 Cargar pedido</button>
@@ -285,27 +293,6 @@
 
     <div class="estado-carga" id="estadoCarga">Cargando productos...</div>
 
-    <!-- SECCIÓN: Remates -->
-    <div class="seccion" id="secRemates" hidden>
-        <div class="seccion-titulo">🔥 Remates</div>
-        <div class="seccion-sub">Liquidación: precios especiales hasta agotar existencias.</div>
-        <div class="fila" id="filaRemates"></div>
-    </div>
-
-    <!-- SECCIÓN: Ofertas relámpago -->
-    <div class="seccion" id="secRelampago" hidden>
-        <div class="seccion-titulo">⚡ Ofertas relámpago</div>
-        <div class="seccion-sub">Promociones por tiempo muy limitado. ¡Aprovecha!</div>
-        <div class="fila" id="filaRelampago"></div>
-    </div>
-
-    <!-- SECCIÓN: Ofertas del mes -->
-    <div class="seccion" id="secMes" hidden>
-        <div class="seccion-titulo">📅 Ofertas del mes</div>
-        <div class="seccion-sub">Los mejores precios de este mes.</div>
-        <div class="fila" id="filaMes"></div>
-    </div>
-
     <!-- SECCIÓN: Vuelve a pedir (lo que ya pidió antes) -->
     <div class="seccion" id="secPedidos" hidden>
         <div class="seccion-titulo">🔁 Vuelve a pedir</div>
@@ -324,10 +311,11 @@
 
     <div class="divisor" id="divisorCatalogo"><hr></div>
 
-    <!-- SECCIÓN: Catálogo completo -->
+    <!-- SECCIÓN: Catálogo completo / vista de ofertas -->
     <div class="sec-catalogo" id="secCatalogo">
+        <button class="btn-volver" id="btnVolverCatalogo" onclick="salirOferta()" hidden>← Ver todo el catálogo</button>
         <div class="seccion-titulo" id="tituloCatalogo">📦 Catálogo completo</div>
-        <div class="seccion-sub">Todos los productos disponibles.</div>
+        <div class="seccion-sub" id="subCatalogo">Todos los productos disponibles.</div>
     </div>
     <div class="catalogo" id="catalogo"></div>
 
@@ -537,7 +525,6 @@
             PRODUCTOS.forEach(function (p) { POR_CODIGO[String(p.codigo)] = p; });
             document.getElementById('estadoCarga').style.display = 'none';
             document.getElementById('barraAcciones').hidden = false; // muestra la barra de acciones
-            pintarOfertas();
             render();
             cargarSugeridos();
             cargarPedidos();
@@ -551,25 +538,23 @@
         }
 
         /* =================== OFERTAS (remate / relámpago / mes) =================== */
-        var HAY_REMATES = false, HAY_RELAMPAGO = false, HAY_MES = false;
+        // Vista de oferta activa: 'remate' | 'relampago' | 'mes' | null
+        var VISTA_OFERTA = null;
 
-        function pintarOfertas() {
-            HAY_REMATES   = llenarOferta('remate',    'filaRemates');
-            HAY_RELAMPAGO = llenarOferta('relampago', 'filaRelampago');
-            HAY_MES       = llenarOferta('mes',       'filaMes');
+        // Muestra una "página" con solo los productos de esa oferta
+        function verOferta(tipo) {
+            VISTA_OFERTA = tipo;
+            var b = document.getElementById('buscar');
+            if (b) b.value = ''; // limpia la búsqueda al entrar a una oferta
+            render();
+            // Coloca la vista en la zona de productos (se siente como otra página)
+            document.getElementById('secCatalogo').scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
-        function llenarOferta(tipo, idFila) {
-            var html = '';
-            PRODUCTOS.forEach(function (p) { if (p.oferta === tipo) html += tarjeta(p); });
-            var el = document.getElementById(idFila);
-            if (el) el.innerHTML = html;
-            return html.length > 0;
-        }
-        // Lleva la vista a una sección de ofertas (o avisa si está vacía)
-        function irA(id) {
-            var el = document.getElementById(id);
-            if (!el || el.hidden) { alert('Por ahora no hay productos en esta sección.'); return; }
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Regresa al catálogo completo
+        function salirOferta() {
+            VISTA_OFERTA = null;
+            render();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         /* =================== PEDIDO DESDE EXCEL =================== */
@@ -833,10 +818,15 @@
         function render() {
             var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
             var buscando = q.length > 0;
+            // Al buscar se sale de la vista de oferta (la búsqueda manda)
+            if (buscando) VISTA_OFERTA = null;
+            var enVistaOferta = !!VISTA_OFERTA;
             // Divide por espacios; cada palabra debe coincidir en al menos un campo
             var palabras = buscando ? q.split(/\s+/).filter(function(w){ return w; }) : [];
             var html = '';
             PRODUCTOS.forEach(function (p) {
+                // Vista de oferta: solo los productos de esa categoría
+                if (enVistaOferta && p.oferta !== VISTA_OFERTA) return;
                 if (buscando) {
                     var haystack = [
                         String(p.nombre || ''),
@@ -850,21 +840,32 @@
                 }
                 html += tarjeta(p);
             });
-            document.getElementById('catalogo').innerHTML = html ||
-                '<p style="padding:20px;color:#778;">Sin resultados para "' + esc(q) + '".</p>';
+            var vacio = enVistaOferta
+                ? '<p style="padding:20px;color:#778;">Por ahora no hay productos en esta sección.</p>'
+                : '<p style="padding:20px;color:#778;">Sin resultados para "' + esc(q) + '".</p>';
+            document.getElementById('catalogo').innerHTML = html || vacio;
 
-            // Mientras se busca, ocultar las secciones de recomendación y mostrar
-            // solo los resultados. Al borrar la búsqueda, restaurarlas.
-            mostrar('secRemates',       !buscando && HAY_REMATES);
-            mostrar('secRelampago',     !buscando && HAY_RELAMPAGO);
-            mostrar('secMes',           !buscando && HAY_MES);
-            mostrar('secPedidos',       !buscando && HAY_PEDIDOS);
-            mostrar('secSugeridos',     !buscando && HAY_SUGERIDOS);
-            mostrar('divisorSugeridos', !buscando && HAY_PEDIDOS && HAY_SUGERIDOS);
-            mostrar('divisorCatalogo',  !buscando);
-            // El título "📦 Catálogo completo" se cambia por "Resultados" al buscar
-            document.getElementById('tituloCatalogo').textContent =
-                buscando ? '🔎 Resultados de la búsqueda' : '📦 Catálogo completo';
+            // Al buscar o en una vista de oferta, ocultar las secciones de recomendación.
+            var ocultarSecs = buscando || enVistaOferta;
+            mostrar('secPedidos',       !ocultarSecs && HAY_PEDIDOS);
+            mostrar('secSugeridos',     !ocultarSecs && HAY_SUGERIDOS);
+            mostrar('divisorSugeridos', !ocultarSecs && HAY_PEDIDOS && HAY_SUGERIDOS);
+            mostrar('divisorCatalogo',  !ocultarSecs);
+            mostrar('btnVolverCatalogo', enVistaOferta);
+
+            // Título y subtítulo según el modo (catálogo / búsqueda / oferta)
+            var titulosOf = { remate:'🔥 Remates', relampago:'⚡ Ofertas relámpago', mes:'📅 Ofertas del mes' };
+            var subsOf = {
+                remate:'Liquidación: precios especiales hasta agotar existencias.',
+                relampago:'Promociones por tiempo muy limitado. ¡Aprovecha!',
+                mes:'Los mejores precios de este mes.'
+            };
+            var titulo, sub;
+            if (enVistaOferta) { titulo = titulosOf[VISTA_OFERTA]; sub = subsOf[VISTA_OFERTA]; }
+            else if (buscando) { titulo = '🔎 Resultados de la búsqueda'; sub = 'Coincidencias con tu búsqueda.'; }
+            else { titulo = '📦 Catálogo completo'; sub = 'Todos los productos disponibles.'; }
+            document.getElementById('tituloCatalogo').textContent = titulo;
+            document.getElementById('subCatalogo').textContent = sub;
         }
 
         function mostrar(id, visible) {
