@@ -4,27 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distribuidora Automotriz JARI</title>
+    <!-- Tipografías elegantes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --oro: #D4AF37;
+            --oro-claro: #f4d97b;
+            --negro: #0a0a0a;
+        }
+
+        * { box-sizing: border-box; }
+
         html, body {
             margin: 0;
-            height: 100%;
+            min-height: 100%;
         }
+
         body {
+            min-height: 100vh;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            background-color: #000000;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-        h1 {
-            color: #D4AF37;
-            font-size: 3rem;
             text-align: center;
-            letter-spacing: 2px;
+            padding: 40px 20px;
+            /* Fondo negro con un degradado sutil para dar profundidad */
+            background: radial-gradient(circle at 50% 30%, #1c1c1c 0%, var(--negro) 70%);
+            color: #ffffff;
+            font-family: 'Montserrat', Arial, sans-serif;
+        }
+
+        /* ---- Logo dibujado en SVG (dorado) ---- */
+        .logo {
+            width: 150px;
+            height: 150px;
+            margin-bottom: 28px;
+            filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.35));
+            animation: aparecer 1s ease-out;
+        }
+
+        /* ---- Título principal ---- */
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: var(--oro);
+            font-size: clamp(1.8rem, 6vw, 3.4rem);
+            font-weight: 700;
+            letter-spacing: 3px;
+            margin: 0;
+            line-height: 1.2;
+            text-shadow: 0 2px 18px rgba(212, 175, 55, 0.25);
+            animation: aparecer 1.2s ease-out;
+        }
+
+        /* Línea decorativa dorada bajo el título */
+        .linea {
+            width: 90px;
+            height: 3px;
+            margin: 22px auto;
+            background: linear-gradient(90deg, transparent, var(--oro), transparent);
+        }
+
+        /* ---- Subtítulo / eslogan ---- */
+        .eslogan {
+            font-weight: 300;
+            font-size: clamp(0.9rem, 3vw, 1.15rem);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #d8d8d8;
+            margin: 0 0 36px;
+            animation: aparecer 1.4s ease-out;
+        }
+
+        /* ---- Botón de contacto ---- */
+        .boton {
+            display: inline-block;
+            padding: 14px 34px;
+            border: 1.5px solid var(--oro);
+            border-radius: 40px;
+            color: var(--oro);
+            text-decoration: none;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+        .boton:hover {
+            background: var(--oro);
+            color: var(--negro);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+        }
+
+        /* ---- Pie de página ---- */
+        footer {
+            position: fixed;
+            bottom: 18px;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: #777;
+        }
+
+        @keyframes aparecer {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
 <body>
+
+    <!--
+      LOGO: Por ahora es un emblema dibujado en código (SVG).
+      Si tienes tu propio logo en imagen (por ejemplo "logo.png"),
+      sube el archivo al repositorio y reemplaza todo este bloque <svg>...</svg>
+      por esta línea:
+          <img class="logo" src="logo.png" alt="Logo JARI">
+    -->
+    <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Logo JARI">
+        <defs>
+            <linearGradient id="oro" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#f4d97b"/>
+                <stop offset="50%" stop-color="#D4AF37"/>
+                <stop offset="100%" stop-color="#b8860b"/>
+            </linearGradient>
+        </defs>
+        <!-- Aro exterior estilo volante / emblema -->
+        <circle cx="100" cy="100" r="92" fill="none" stroke="url(#oro)" stroke-width="4"/>
+        <circle cx="100" cy="100" r="80" fill="none" stroke="url(#oro)" stroke-width="1.5" opacity="0.6"/>
+        <!-- Alas laterales (estilo automotriz) -->
+        <path d="M30 100 q 18 -16 38 0 q -18 10 -38 0 Z" fill="url(#oro)"/>
+        <path d="M170 100 q -18 -16 -38 0 q 18 10 38 0 Z" fill="url(#oro)"/>
+        <!-- Iniciales JARI -->
+        <text x="100" y="118" text-anchor="middle"
+              font-family="Cinzel, serif" font-size="56" font-weight="700"
+              fill="url(#oro)" letter-spacing="2">JARI</text>
+    </svg>
+
     <h1>Distribuidora Automotriz JARI</h1>
+
+    <div class="linea"></div>
+
+    <p class="eslogan">Repuestos y Distribución Automotriz</p>
+
+    <!-- Cambia el número por tu WhatsApp real (formato: código de país + número) -->
+    <a class="boton" href="https://wa.me/000000000000" target="_blank" rel="noopener">Contáctanos</a>
+
+    <footer>© 2026 Distribuidora Automotriz JARI</footer>
+
 </body>
 </html>
