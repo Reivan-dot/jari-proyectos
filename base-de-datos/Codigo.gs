@@ -18,6 +18,18 @@ function json(obj) {
     .setMimeType(ContentService.MimeType.JSON);
 }
 
+/**
+ * EJECUTA ESTA FUNCIÓN UNA VEZ para conceder el permiso de enviar correos.
+ * Selecciónala en el menú de funciones (arriba) y pulsa "Ejecutar".
+ * Google te pedirá autorizar el envío de correo: acepta.
+ * Te llegará un correo de prueba a tu propia cuenta.
+ */
+function autorizar() {
+  var correo = Session.getEffectiveUser().getEmail();
+  MailApp.sendEmail(correo, 'Permisos JARI OK ✅',
+    'Si recibes este correo, el envío de correos ya quedó autorizado. ¡Listo!');
+}
+
 function asegurarEncabezados(hoja) {
   if (hoja.getLastRow() === 0) {
     hoja.appendRow([
