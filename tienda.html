@@ -219,7 +219,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     if (!res.ok || !res.codigos || !res.codigos.length) return;
-                    pintarFila('filaSugeridos', 'secSugeridos', res.codigos);
+                    pintarFila('filaSugeridos', 'secSugeridos', res.codigos, true);
                 })
                 .catch(function () {});
         }
@@ -237,12 +237,20 @@
         }
 
         // Dibuja una fila de productos a partir de una lista de códigos
-        function pintarFila(idFila, idSeccion, codigos) {
-            var html = '';
+        // (si alfabetico = true, se ordenan por nombre A→Z)
+        function pintarFila(idFila, idSeccion, codigos, alfabetico) {
+            var prods = [];
             codigos.forEach(function (c) {
                 var p = POR_CODIGO[String(c).trim()];
-                if (p) html += tarjeta(p);
+                if (p) prods.push(p);
             });
+            if (alfabetico) {
+                prods.sort(function (a, b) {
+                    return String(a.nombre).localeCompare(String(b.nombre), 'es', { sensitivity: 'base' });
+                });
+            }
+            var html = '';
+            prods.forEach(function (p) { html += tarjeta(p); });
             if (!html) return;
             document.getElementById(idFila).innerHTML = html;
             document.getElementById(idSeccion).hidden = false;
