@@ -422,7 +422,9 @@
                             telefono: res.telefono || '',
                             numCliente: res.numCliente || ''
                         }));
-                        window.location.href = 'tienda.html';
+                        /* ?v= fuerza al navegador a descargar la tienda fresca,
+                           ignorando cualquier versión en caché */
+                        window.location.href = 'tienda.html?v=' + Date.now();
                     } else {
                         aviso.style.color = '#ffb3b6';
                         aviso.textContent = res.error || 'Número o contraseña incorrectos.';

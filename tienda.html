@@ -264,20 +264,33 @@
         var cliente = null;
         try { cliente = JSON.parse(sessionStorage.getItem('jari_cliente')); } catch (e) {}
 
+        /* Si no hay sesión válida, vuelve al inicio */
         if (!cliente || !cliente.nombre) {
             window.location.href = 'index.html#clientes';
-        } else {
-            document.getElementById('nombreCliente').childNodes[0].nodeValue = '👤 ' + cliente.nombre;
-            var etiqueta = 'Usuario N° ' + cliente.numero;
-            if (cliente.numCliente) etiqueta += ' · Cliente N° ' + cliente.numCliente;
-            document.getElementById('numeroCliente').textContent = etiqueta;
+        }
 
-            if (!cliente.numCliente) {
-                // Sin N° Cliente: mostrar pantalla de espera, no cargar precios
-                document.getElementById('pendienteNombre').textContent = cliente.nombre;
-                document.getElementById('pantallaPendiente').hidden = false;
-                document.getElementById('estadoCarga').hidden = true;
-            }
+        /* Si hay sesión pero la sesión NO tiene numCliente guardado
+           (por ejemplo, se inició sesión antes de que se asignara), fuerza
+           re-login para que el navegador obtenga datos frescos del servidor */
+        if (cliente && cliente.nombre && !cliente.numCliente) {
+            /* Antes de redirigir: muestra la pantalla de espera para no
+               dejar la página en blanco si la redirección tarda */
+            var nPend = document.getElementById('pendienteNombre');
+            var sPend = document.getElementById('pantallaPendiente');
+            var eCarg = document.getElementById('estadoCarga');
+            if (nPend) nPend.textContent = cliente.nombre;
+            if (sPend) sPend.hidden = false;
+            if (eCarg) eCarg.hidden = true;
+            /* Actualiza el topbar con los datos que sí tenemos */
+            var nCliente = document.getElementById('nombreCliente');
+            var nNum    = document.getElementById('numeroCliente');
+            if (nCliente && nCliente.childNodes[0]) nCliente.childNodes[0].nodeValue = '👤 ' + cliente.nombre;
+            if (nNum) nNum.textContent = 'Usuario N° ' + (cliente.numero || '');
+        } else if (cliente && cliente.nombre && cliente.numCliente) {
+            /* Sesión completa: pinta el topbar y sigue normalmente */
+            document.getElementById('nombreCliente').childNodes[0].nodeValue = '👤 ' + cliente.nombre;
+            document.getElementById('numeroCliente').textContent =
+                'Usuario N° ' + cliente.numero + ' · Cliente N° ' + cliente.numCliente;
         }
 
         var PRODUCTOS = [];        // catálogo completo
