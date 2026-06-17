@@ -46,7 +46,10 @@
         .seccion-sub { font-size:.8rem; color:#778; font-weight:300; margin:3px 0 0 16px; }
         .fila { display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:18px; margin-top:14px; }
         .divisor { max-width:1180px; margin:30px auto 0; padding:0 20px; }
-        .divisor hr { border:none; border-top:1px dashed #cfd4e8; }
+        .divisor hr { border:none; border-top:4px solid var(--azul); border-radius:2px; }
+
+        /* ===== SECCIÓN CATÁLOGO COMPLETO ===== */
+        .sec-catalogo { max-width:1180px; margin: 28px auto 0; padding: 0 20px; }
 
         /* ===== GRID DE PRODUCTOS ===== */
         .catalogo {
@@ -109,6 +112,8 @@
         <div class="fila" id="filaPedidos"></div>
     </div>
 
+    <div class="divisor" id="divisorSugeridos" hidden><hr></div>
+
     <!-- SECCIÓN: Sugeridos para ti (por perfil) -->
     <div class="seccion" id="secSugeridos" hidden>
         <div class="seccion-titulo">✨ Sugeridos para ti</div>
@@ -116,9 +121,13 @@
         <div class="fila" id="filaSugeridos"></div>
     </div>
 
-    <div class="divisor" id="divisorCatalogo" hidden><hr></div>
+    <div class="divisor" id="divisorCatalogo"><hr></div>
 
-    <!-- Catálogo completo -->
+    <!-- SECCIÓN: Catálogo completo -->
+    <div class="sec-catalogo">
+        <div class="seccion-titulo">📦 Catálogo completo</div>
+        <div class="seccion-sub">Todos los productos disponibles.</div>
+    </div>
     <div class="catalogo" id="catalogo"></div>
 
     <!-- Barra inferior: resumen + enviar pedido -->
@@ -208,7 +217,7 @@
                 html += tarjeta(p);
             });
             document.getElementById('catalogo').innerHTML = html;
-            document.getElementById('divisorCatalogo').hidden = false;
+            // divisorCatalogo siempre visible (se muestra desde HTML)
         }
 
         /* =================== SUGERIDOS POR PERFIL =================== */
@@ -254,6 +263,9 @@
             if (!html) return;
             document.getElementById(idFila).innerHTML = html;
             document.getElementById(idSeccion).hidden = false;
+            // muestra el divisor que precede a esta sección si existe
+            var div = document.getElementById(idSeccion.replace('sec', 'divisor'));
+            if (div) div.hidden = false;
         }
 
         /* =================== CANTIDADES (compartidas en todas las secciones) =================== */
