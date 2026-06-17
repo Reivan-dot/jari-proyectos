@@ -142,6 +142,31 @@ function doPost(e) {
 // Verificación del correo (cuando el cliente da clic en el enlace)
 function doGet(e) {
   var p = e.parameter || {};
+
+  // ---------- ENTREGAR EL CATÁLOGO DE PRODUCTOS ----------
+  if (p.accion === 'catalogo') {
+    var sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Productos');
+    if (!sh) return json({ ok: false, error: 'No existe una hoja llamada "Productos".' });
+    var ultimo = sh.getLastRow();
+    var productos = [];
+    if (ultimo >= 2) {
+      // Columnas: codigo | nombre | descripcion | precio | medida | imagen
+      var vals = sh.getRange(2, 1, ultimo - 1, 6).getValues();
+      for (var i = 0; i < vals.length; i++) {
+        var r = vals[i];
+        if (r[0] === '' && r[1] === '') continue; // salta filas vacías
+        productos.push({
+          codigo: String(r[0]),
+          nombre: r[1],
+          descripcion: r[2],
+          precio: Number(r[3]) || 0,
+          medida: r[4],
+          img: String(r[5])
+        });
+      }
+    }
+    return json({ ok: true, productos: productos });
+  }
   if (p.accion === 'verificar' && p.token) {
     var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
     var ultimo = hoja.getLastRow();

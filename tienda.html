@@ -21,36 +21,40 @@
         .total-box { font-family:'Oswald',sans-serif; }
         .total-box .etq { font-size:.7rem; letter-spacing:1px; text-transform:uppercase; color:#aeb4d6; display:block; }
         .total-box .val { font-size:1.7rem; font-weight:700; color:#fff; }
-        .total-box .val span { color: #6be26b; }
         .cliente-box { display:flex; align-items:center; gap:14px; }
         .cliente-box .nombre { font-weight:600; }
         .cliente-box .nombre small { display:block; font-weight:300; color:#aeb4d6; font-size:.72rem; }
         .btn-salir { background:transparent; border:1.5px solid #aeb4d6; color:#fff; padding:7px 16px; border-radius:6px; cursor:pointer; font-size:.78rem; text-transform:uppercase; letter-spacing:1px; }
         .btn-salir:hover { background:var(--rojo); border-color:var(--rojo); }
 
-        /* ===== ENCABEZADO TIENDA ===== */
-        .cabecera { text-align:center; padding: 30px 20px 8px; }
-        .cabecera img { height: 60px; }
-        .cabecera h1 { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; margin-top:10px; font-size:1.5rem; }
+        /* ===== ENCABEZADO TIENDA + BUSCADOR ===== */
+        .cabecera { text-align:center; padding: 26px 20px 6px; }
+        .cabecera img { height: 56px; }
+        .cabecera h1 { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; margin-top:8px; font-size:1.4rem; }
         .cabecera h1 span { color:var(--rojo); }
+        .buscador { max-width:480px; margin:16px auto 0; }
+        .buscador input { width:100%; padding:13px 18px; border:2px solid #cfd4e8; border-radius:30px; font-size:1rem; font-family:inherit; outline:none; }
+        .buscador input:focus { border-color:var(--rojo); }
+
+        .estado-carga { text-align:center; padding:50px 20px; color:#667; font-size:1.05rem; }
 
         /* ===== GRID DE PRODUCTOS ===== */
         .catalogo {
-            display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-            gap: 20px; max-width: 1100px; margin: 24px auto 120px; padding: 0 20px;
+            display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 18px; max-width: 1180px; margin: 20px auto 130px; padding: 0 20px;
         }
         .card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 6px 16px rgba(27,36,86,.10); display:flex; flex-direction:column; }
-        .card img { width:100%; height:180px; object-fit:contain; background:#fafafa; padding:10px; }
-        .card .info { padding:16px; display:flex; flex-direction:column; flex:1; }
-        .card .cod { font-size:.7rem; color:#9aa; letter-spacing:1px; }
-        .card h3 { font-size:1rem; color:var(--azul); margin:2px 0 6px; }
-        .card .desc { font-size:.83rem; color:#666; font-weight:300; flex:1; }
-        .card .precio { font-family:'Oswald',sans-serif; font-size:1.5rem; color:var(--rojo); font-weight:700; margin-top:10px; }
-        .card .medida { font-size:.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; }
-        .qty { display:flex; align-items:center; gap:8px; margin-top:14px; }
+        .card img { width:100%; height:170px; object-fit:contain; background:#fafafa; padding:10px; }
+        .card .info { padding:14px; display:flex; flex-direction:column; flex:1; }
+        .card .cod { font-size:.68rem; color:#9aa; letter-spacing:1px; }
+        .card h3 { font-size:.95rem; color:var(--azul); margin:2px 0 6px; }
+        .card .desc { font-size:.8rem; color:#666; font-weight:300; flex:1; }
+        .card .precio { font-family:'Oswald',sans-serif; font-size:1.4rem; color:var(--rojo); font-weight:700; margin-top:10px; }
+        .card .medida { font-size:.72rem; color:#888; text-transform:uppercase; letter-spacing:1px; }
+        .qty { display:flex; align-items:center; gap:8px; margin-top:12px; }
         .qty button { width:34px; height:34px; border:none; border-radius:8px; background:var(--azul); color:#fff; font-size:1.2rem; cursor:pointer; }
         .qty button:hover { background:var(--rojo); }
-        .qty input { width:56px; height:34px; text-align:center; border:2px solid #cfd4e8; border-radius:8px; font-size:1rem; font-family:inherit; }
+        .qty input { width:54px; height:34px; text-align:center; border:2px solid #cfd4e8; border-radius:8px; font-size:1rem; font-family:inherit; }
 
         /* ===== BARRA INFERIOR (enviar pedido) ===== */
         .pedido-bar {
@@ -63,7 +67,7 @@
         .btn-pedido:hover { background:#1da851; }
         .btn-pedido:disabled { background:#bbb; cursor:not-allowed; }
 
-        @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.2rem; } }
+        @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.15rem; } }
     </style>
 </head>
 <body>
@@ -83,9 +87,11 @@
     <div class="cabecera">
         <img src="logojari.png" alt="Distribuidora Automotriz JARI">
         <h1>Catálogo de <span>Productos</span></h1>
+        <div class="buscador"><input type="text" id="buscar" placeholder="🔎 Buscar por nombre o código..." oninput="render()"></div>
     </div>
 
-    <div class="catalogo" id="catalogo"><!-- se llena con JavaScript --></div>
+    <div class="estado-carga" id="estadoCarga">Cargando productos...</div>
+    <div class="catalogo" id="catalogo"></div>
 
     <!-- Barra inferior: resumen + enviar pedido -->
     <div class="pedido-bar">
@@ -96,24 +102,18 @@
     </div>
 
     <script>
-        /* ====== CONFIGURACIÓN ====== */
-        var WHATSAPP = '526672161558'; // tu número
+        /* =================== CONFIGURACIÓN =================== */
+        var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj_eRINwOroXb1aS3WZBYGNUd8z7nx86QHOUZ6g2Z98uIMl51PVyG4p6605SvePVOZ/exec';
+        var WHATSAPP = '526672161558';
         var MONEDA = 'MXN';
+        var RUTA_IMAGENES = ''; // si pones las fotos en una carpeta, ej: 'fotos/'
 
-        /* ======================================================================
-           CATÁLOGO DE PRODUCTOS  (EJEMPLO — luego pondremos tus precios reales)
-           Cada producto: codigo, nombre, descripcion, precio, medida, img
-        ====================================================================== */
-        var PRODUCTOS = [
-            { codigo:'756',    nombre:'Faros LED Rectangulares', descripcion:'Alta luminosidad, 6 pulgadas.', precio:850.00, medida:'Par',   img:'756.png' },
-            { codigo:'109529', nombre:'Faros de Niebla LED',     descripcion:'"Devil\'s Eye" con colores RGB y control.', precio:1200.00, medida:'Par', img:'109529.jpeg' },
-            { codigo:'4',      nombre:'Tira LED RGB',            descripcion:'Multicolor con control remoto, 5 m.', precio:320.00, medida:'Rollo', img:'4.png' },
-            { codigo:'109469', nombre:'Cubretuercas Cromados',   descripcion:'Acabado espejo para camión.', precio:45.00, medida:'Pieza', img:'109469.jpeg' },
-            { codigo:'109503', nombre:'Luz Piloto / Plafón',     descripcion:'LED rojo con base cromada.', precio:65.00, medida:'Pieza', img:'109503.jpeg' },
-            { codigo:'109521', nombre:'Plumas Limpiaparabrisas', descripcion:'Juego 14" + 22".', precio:180.00, medida:'Juego', img:'109521.jpeg' }
+        /* Catálogo de respaldo (se usa solo si la hoja de Google aún no está lista) */
+        var FALLBACK = [
+            { codigo:'756', nombre:'Faros LED Rectangulares (ejemplo)', descripcion:'Configura tu hoja "Productos" en Google.', precio:0, medida:'Par', img:'756.png' }
         ];
 
-        /* ====== PROTEGER LA TIENDA: requiere haber iniciado sesión ====== */
+        /* =================== SESIÓN =================== */
         var cliente = null;
         try { cliente = JSON.parse(sessionStorage.getItem('jari_cliente')); } catch (e) {}
         if (!cliente || !cliente.nombre) {
@@ -123,44 +123,72 @@
             document.getElementById('numeroCliente').textContent = 'Cliente N° ' + cliente.numero;
         }
 
+        var PRODUCTOS = [];
+        var CANT = {}; // cantidades por código (se conservan al buscar)
+
         function fmt(n) { return n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 
-        /* ====== DIBUJAR EL CATÁLOGO ====== */
-        var cont = document.getElementById('catalogo');
-        PRODUCTOS.forEach(function (p, i) {
-            var card = document.createElement('div');
-            card.className = 'card';
-            card.innerHTML =
-                '<img src="' + p.img + '" alt="' + p.nombre + '">' +
-                '<div class="info">' +
-                    '<span class="cod">CÓDIGO: ' + p.codigo + '</span>' +
-                    '<h3>' + p.nombre + '</h3>' +
-                    '<p class="desc">' + p.descripcion + '</p>' +
-                    '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + p.medida + '</span></div>' +
-                    '<div class="qty">' +
-                        '<button onclick="cambiar(' + i + ',-1)">−</button>' +
-                        '<input type="number" id="qty' + i + '" min="0" value="0" onchange="recalcular()" oninput="recalcular()">' +
-                        '<button onclick="cambiar(' + i + ',1)">+</button>' +
-                    '</div>' +
-                '</div>';
-            cont.appendChild(card);
-        });
+        /* =================== CARGAR CATÁLOGO =================== */
+        fetch(SCRIPT_URL + '?accion=catalogo')
+            .then(function (r) { return r.json(); })
+            .then(function (res) {
+                PRODUCTOS = (res.ok && res.productos && res.productos.length) ? res.productos : FALLBACK;
+                arrancar();
+            })
+            .catch(function () { PRODUCTOS = FALLBACK; arrancar(); });
 
-        function cambiar(i, delta) {
-            var inp = document.getElementById('qty' + i);
-            var v = parseInt(inp.value, 10) || 0;
-            v = Math.max(0, v + delta);
-            inp.value = v;
+        function arrancar() {
+            document.getElementById('estadoCarga').style.display = 'none';
+            render();
+        }
+
+        /* =================== DIBUJAR CATÁLOGO (con buscador) =================== */
+        function render() {
+            var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
+            var cont = document.getElementById('catalogo');
+            cont.innerHTML = '';
+            PRODUCTOS.forEach(function (p) {
+                if (q && (String(p.nombre).toLowerCase().indexOf(q) < 0 &&
+                          String(p.codigo).toLowerCase().indexOf(q) < 0)) return;
+                var cant = CANT[p.codigo] || 0;
+                var card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML =
+                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + p.nombre + '" onerror="this.style.opacity=.25">' +
+                    '<div class="info">' +
+                        '<span class="cod">CÓDIGO: ' + p.codigo + '</span>' +
+                        '<h3>' + p.nombre + '</h3>' +
+                        '<p class="desc">' + (p.descripcion || '') + '</p>' +
+                        '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + p.medida + '</span></div>' +
+                        '<div class="qty">' +
+                            '<button onclick="cambiar(\'' + p.codigo + '\',-1)">−</button>' +
+                            '<input type="number" min="0" value="' + cant + '" ' +
+                                   'onchange="setCant(\'' + p.codigo + '\',this.value)" ' +
+                                   'oninput="setCant(\'' + p.codigo + '\',this.value)">' +
+                            '<button onclick="cambiar(\'' + p.codigo + '\',1)">+</button>' +
+                        '</div>' +
+                    '</div>';
+                cont.appendChild(card);
+            });
+        }
+
+        function setCant(codigo, valor) {
+            var v = parseInt(valor, 10); if (isNaN(v) || v < 0) v = 0;
+            CANT[codigo] = v;
+            recalcular();
+        }
+        function cambiar(codigo, delta) {
+            var v = (CANT[codigo] || 0) + delta; if (v < 0) v = 0;
+            CANT[codigo] = v;
+            render();
             recalcular();
         }
 
         function recalcular() {
             var total = 0, articulos = 0;
-            PRODUCTOS.forEach(function (p, i) {
-                var v = parseInt(document.getElementById('qty' + i).value, 10) || 0;
-                if (v < 0) { v = 0; document.getElementById('qty' + i).value = 0; }
-                total += v * p.precio;
-                articulos += v;
+            PRODUCTOS.forEach(function (p) {
+                var v = CANT[p.codigo] || 0;
+                total += v * p.precio; articulos += v;
             });
             document.getElementById('totalArriba').textContent = fmt(total);
             document.getElementById('totalAbajo').textContent = fmt(total);
@@ -170,15 +198,12 @@
 
         function enviarPedido() {
             var lineas = [], total = 0;
-            PRODUCTOS.forEach(function (p, i) {
-                var v = parseInt(document.getElementById('qty' + i).value, 10) || 0;
-                if (v > 0) {
-                    var sub = v * p.precio;
-                    total += sub;
-                    lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub));
-                }
+            PRODUCTOS.forEach(function (p) {
+                var v = CANT[p.codigo] || 0;
+                if (v > 0) { var sub = v * p.precio; total += sub;
+                    lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub)); }
             });
-            if (lineas.length === 0) return;
+            if (!lineas.length) return;
             var msg = 'Hola, soy el cliente N° ' + cliente.numero + ' (' + cliente.nombre + ').\n' +
                       'Quiero hacer este pedido:\n\n' + lineas.join('\n') +
                       '\n\nTOTAL: $' + fmt(total) + ' ' + MONEDA;
