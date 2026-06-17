@@ -9,19 +9,24 @@ ahí, la tienda se actualiza sola (en uno o dos minutos).
 1. Abre la **misma hoja de Google** donde se guardan los clientes (Clientes JARI).
 2. Abajo, crea una **pestaña nueva** y nómbrala exactamente: **`Productos`**
    (con P mayúscula).
-3. En esa pestaña, pon estos títulos en la **fila 1**, una por columna (A a F):
+3. En esa pestaña, pon estos títulos en la **fila 1**, una por columna (A a G):
 
-   | A | B | C | D | E | F |
-   |---|---|---|---|---|---|
-   | codigo | nombre | descripcion | precio | medida | imagen |
+   | A | B | C | D | E | F | G |
+   |---|---|---|---|---|---|---|
+   | codigo | nombre | descripcion | precio | medida | imagen | existencia |
 
 4. Pega debajo TODOS tus productos (puedes copiar y pegar directo desde tu Excel
    PRECIOS.xlsx). Ejemplo:
 
-   | codigo | nombre | descripcion | precio | medida | imagen |
-   |--------|--------|-------------|--------|--------|--------|
-   | 668 | FARO HORIZONTAL | Faro LED rect blanco 6 CREE LED | 45 | PAR | 668.png |
-   | 664 | AROMA CORCHO | Aroma corcho cherry en lata | 37 | PZ | 664.png |
+   | codigo | nombre | descripcion | precio | medida | imagen | existencia |
+   |--------|--------|-------------|--------|--------|--------|-----------|
+   | 668 | FARO HORIZONTAL | Faro LED rect blanco 6 CREE LED | 45 | PAR | 668.png | 12 |
+   | 664 | AROMA CORCHO | Aroma corcho cherry en lata | 37 | PZ | 664.png | 0 |
+
+   > **columna G `existencia`:** escribe la cantidad que tienes en almacén.
+   > - Si pones un número mayor a 0, la tarjeta muestra **"✓ Existencia: 12"** en verde.
+   > - Si pones **0**, muestra **"✗ Sin existencia"** en rojo.
+   > - Si dejas la celda **vacía**, no se muestra nada (úsalo para productos sin control de stock).
 
 5. Vuelve a publicar el Apps Script una vez (**Implementar → Administrar
    implementaciones → ✏️ Editar → Versión: Nueva versión → Implementar**).

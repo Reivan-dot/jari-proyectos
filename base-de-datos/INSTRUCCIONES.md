@@ -43,19 +43,37 @@ Mándame esa URL por aquí y yo la pego en la página, o tú mismo:
 - Para descargarla como Excel: **Archivo → Descargar → Microsoft Excel (.xlsx)**.
 
 ## Columnas que se guardan
-N° Usuario · Fecha de registro · Nombre · Correo · Contraseña · Verificado ·
-Teléfono · Dirección · Código Postal · Ciudad · Estado ·
-Productos de interés · Qué espera al contactarnos · Token · Perfil · N° Cliente
 
-> **N° Usuario** (columna A): lo asigna la página automáticamente (1001, 1002…) y
-> es con el que el cliente inicia sesión.
-> **N° Cliente** (columna P): lo escribes **tú a mano** con el número que ese cliente
-> tiene en tu sistema. Aparece en el pedido de WhatsApp junto al N° de usuario.
+| Col | Nombre | Quién llena |
+|-----|--------|-------------|
+| A | N° Usuario | Automático (1001, 1002…) — con el que el cliente inicia sesión |
+| B | Fecha de registro | Automático |
+| C | Nombre | El cliente al registrarse |
+| D | Correo | El cliente |
+| E | Contraseña | El cliente |
+| F | Verificado | Automático (Sí / No) |
+| G | Teléfono | El cliente |
+| H | Dirección | El cliente |
+| I | Código Postal | El cliente |
+| J | Ciudad | El cliente |
+| K | Estado | El cliente |
+| L | Productos de interés | El cliente |
+| M | Qué espera al contactarnos | El cliente |
+| N | Token | Automático (verificación de correo) |
+| O | Perfil | **Tú** (define qué sugerencias verá en la tienda) |
+| P | N° Cliente | **Tú** a mano — ⚠️ **sin este número el cliente NO puede ver los precios** |
+| Q | Vendedor | **Tú** — escribe el nombre del vendedor asignado |
+| R | Frecuencia de entradas | Automático — cuántas veces entró a la tienda |
+| S | Frecuencia de compras | Automático — cuántos pedidos envió por WhatsApp |
+
+> **Proporción entradas/compras:** puedes ver qué tan seguido el cliente pide vs. cuántas
+> veces entra. Para calcularlo en la misma hoja, añade una columna T con la fórmula
+> `=SI(S2=0,"—",TEXTO(R2/S2,"0.0")&" visitas/pedido")` y cópiala hacia abajo.
 
 ---
 
 ## ⚠️ Si ya tenías el código anterior (ACTUALIZACIÓN)
-Como ahora se agregaron columnas nuevas (correo, contraseña, verificado…), haz esto:
+Como ahora se agregaron columnas nuevas (Vendedor, Frecuencia de entradas, Frecuencia de compras), haz esto:
 
 1. **Vacía la hoja:** borra TODAS las filas que tenga (incluida la de títulos y los
    registros de prueba). La hoja debe quedar completamente vacía: así el código
