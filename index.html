@@ -213,7 +213,7 @@
     <section id="registro" class="registro">
         <h2 class="titulo-seccion">Regís<span>trate</span></h2>
         <div class="barra-roja"></div>
-        <p class="subtitulo-seccion">Crea tu cuenta y recibe tu número de cliente</p>
+        <p class="subtitulo-seccion">Crea tu cuenta y recibe tu número de usuario</p>
 
         <form id="formRegistro" class="form-registro" onsubmit="return enviarRegistro(event)">
             <div class="form-grid">
@@ -246,7 +246,7 @@
         </form>
 
         <div id="exitoRegistro" class="exito">
-            <p>¡Registro exitoso! 🎉 Tu número de cliente es:</p>
+            <p>¡Registro exitoso! 🎉 Tu número de usuario es:</p>
             <div class="num" id="numAsignado">—</div>
             <p>Guárdalo para tus próximas consultas.</p>
             <p style="margin-top:10px; font-size:0.9rem;">📧 Te enviamos un <strong>correo de verificación</strong>. Revisa tu bandeja (y la carpeta de spam).</p>
@@ -260,7 +260,7 @@
         <p class="subtitulo-seccion">Inicia sesión para ver precios y comprar en línea</p>
 
         <div class="form-cliente">
-            <label for="numCliente">Número de cliente</label>
+            <label for="numCliente">Número de usuario</label>
             <input type="text" id="numCliente" inputmode="numeric" placeholder="Ej. 1001" autocomplete="off">
             <label for="passCliente" style="margin-top:6px;">Contraseña</label>
             <input type="password" id="passCliente" placeholder="Tu contraseña" autocomplete="off">
@@ -346,7 +346,7 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     if (res.ok) {
-                        document.getElementById('numAsignado').textContent = res.numCliente;
+                        document.getElementById('numAsignado').textContent = res.numUsuario || res.numCliente;
                         form.style.display = 'none';
                         var exito = document.getElementById('exitoRegistro');
                         exito.style.display = 'block';
@@ -398,7 +398,7 @@
             var aviso = document.getElementById('avisoCliente');
             if (num === '' || pass === '') {
                 aviso.style.color = '#ffb3b6';
-                aviso.textContent = 'Escribe tu número de cliente y tu contraseña.';
+                aviso.textContent = 'Escribe tu número de usuario y tu contraseña.';
                 return;
             }
             aviso.style.color = '#dfe2f2';
@@ -411,7 +411,13 @@
                 .then(function (r) { return r.json(); })
                 .then(function (res) {
                     if (res.ok) {
-                        sessionStorage.setItem('jari_cliente', JSON.stringify({ numero: num, nombre: res.nombre, perfil: res.perfil || '' }));
+                        sessionStorage.setItem('jari_cliente', JSON.stringify({
+                            numero: num,
+                            nombre: res.nombre,
+                            perfil: res.perfil || '',
+                            telefono: res.telefono || '',
+                            numCliente: res.numCliente || ''
+                        }));
                         window.location.href = 'tienda.html';
                     } else {
                         aviso.style.color = '#ffb3b6';

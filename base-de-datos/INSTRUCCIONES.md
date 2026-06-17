@@ -43,9 +43,14 @@ Mándame esa URL por aquí y yo la pego en la página, o tú mismo:
 - Para descargarla como Excel: **Archivo → Descargar → Microsoft Excel (.xlsx)**.
 
 ## Columnas que se guardan
-N° Cliente · Fecha de registro · Nombre · Correo · Contraseña · Verificado ·
+N° Usuario · Fecha de registro · Nombre · Correo · Contraseña · Verificado ·
 Teléfono · Dirección · Código Postal · Ciudad · Estado ·
-Productos de interés · Qué espera al contactarnos · Token
+Productos de interés · Qué espera al contactarnos · Token · Perfil · N° Cliente
+
+> **N° Usuario** (columna A): lo asigna la página automáticamente (1001, 1002…) y
+> es con el que el cliente inicia sesión.
+> **N° Cliente** (columna P): lo escribes **tú a mano** con el número que ese cliente
+> tiene en tu sistema. Aparece en el pedido de WhatsApp junto al N° de usuario.
 
 ---
 
