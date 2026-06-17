@@ -109,6 +109,32 @@ function doPost(e) {
       return json({ ok: true });
     }
 
+    // ---------- GUARDAR REPORTE DE FALTANTES ----------
+    if (accion === 'guardarFaltantes') {
+      var detF = (d.faltantes || '').trim();
+      if (detF) {
+        var hojaFalt = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Faltantes');
+        if (!hojaFalt) hojaFalt = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Faltantes');
+        if (hojaFalt.getLastRow() === 0) {
+          hojaFalt.appendRow(['Fecha', 'N° Cliente', 'N° Usuario', 'Nombre',
+                              'Código', 'Producto', 'Cantidad pedida', 'Disponible', 'Faltaron']);
+        }
+        var ahoraF = new Date();
+        // Cada línea: codigo|nombre|pedida|disponible|falto
+        detF.split('\n').forEach(function (linea) {
+          var partes = linea.split('|');
+          if (partes.length >= 5) {
+            hojaFalt.appendRow([
+              ahoraF, d.numCliente || '', d.numero || '', d.nombre || '',
+              partes[0], partes[1], Number(partes[2]) || 0,
+              Number(partes[3]) || 0, Number(partes[4]) || 0
+            ]);
+          }
+        });
+      }
+      return json({ ok: true });
+    }
+
     // ---------- REGISTRAR VISITA (incrementa Frecuencia de entradas) ----------
     if (accion === 'registrarVisita') {
       var numVis = (d.numero || '').trim();
