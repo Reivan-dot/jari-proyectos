@@ -109,6 +109,34 @@
         .producto h3 { color: var(--azul); font-size: 1.02rem; letter-spacing: 0.5px; margin-bottom: 6px; }
         .producto p { color: #666; font-size: 0.88rem; font-weight: 300; }
 
+        /* ===== REGISTRO ===== */
+        .registro { background: #f4f5fa; color: var(--azul); }
+        .form-registro { max-width: 760px; margin: 0 auto; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .campo { display: flex; flex-direction: column; text-align: left; }
+        .campo.completo { grid-column: 1 / -1; }
+        .campo label { font-family: 'Oswald', sans-serif; font-size: 0.76rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+        .campo input, .campo textarea {
+            padding: 12px 14px; border: 2px solid #cfd4e8; border-radius: 8px;
+            font-family: inherit; font-size: 0.98rem; color: var(--azul); background: #fff;
+            outline: none; transition: border-color 0.2s;
+        }
+        .campo input:focus, .campo textarea:focus { border-color: var(--rojo); }
+        .campo textarea { resize: vertical; min-height: 84px; }
+        .intereses { grid-column: 1 / -1; text-align: left; }
+        .intereses-titulo { font-family: 'Oswald', sans-serif; font-size: 0.76rem; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; }
+        .chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .chip { display: inline-flex; align-items: center; gap: 7px; background: #fff; border: 2px solid #cfd4e8; border-radius: 30px; padding: 8px 14px; font-size: 0.85rem; cursor: pointer; }
+        .chip input { accent-color: var(--rojo); }
+        .registro .boton { margin-top: 24px; }
+        .registro-aviso { margin-top: 14px; min-height: 20px; font-size: 0.9rem; }
+        .exito {
+            display: none; background: #fff; border: 2px solid var(--rojo); border-radius: 16px;
+            padding: 34px 26px; text-align: center; max-width: 520px; margin: 0 auto;
+        }
+        .exito .num { font-family: 'Oswald', sans-serif; font-size: 2.6rem; color: var(--rojo); font-weight: 700; letter-spacing: 3px; margin: 8px 0; }
+        @media (max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+
         /* ===== CONSULTA DE CLIENTE ===== */
         .clientes { background: var(--azul-osc); }
         .form-cliente { max-width: 420px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 14px; }
@@ -142,6 +170,7 @@
         <div class="nav-menu">
             <a href="#inicio">Inicio</a>
             <a href="#productos">Productos</a>
+            <a href="#registro">Registro</a>
             <a href="#clientes">Clientes</a>
             <a href="#contacto">Contacto</a>
         </div>
@@ -172,6 +201,47 @@
             <div class="producto"><img src="109469.jpeg" alt="Cubretuercas cromados"><h3>Cubretuercas Cromados</h3><p>Acabado espejo para camión.</p></div>
             <div class="producto"><img src="109503.jpeg" alt="Luz piloto LED roja"><h3>Luz Piloto / Plafón</h3><p>LED rojo con base cromada.</p></div>
             <div class="producto"><img src="109521.jpeg" alt="Plumas limpiaparabrisas"><h3>Plumas Limpiaparabrisas</h3><p>Varias medidas disponibles.</p></div>
+        </div>
+    </section>
+
+    <!-- ===================== REGISTRO ===================== -->
+    <section id="registro" class="registro">
+        <h2 class="titulo-seccion">Regís<span>trate</span></h2>
+        <div class="barra-roja"></div>
+        <p class="subtitulo-seccion">Crea tu cuenta y recibe tu número de cliente</p>
+
+        <form id="formRegistro" class="form-registro" onsubmit="return enviarRegistro(event)">
+            <div class="form-grid">
+                <div class="campo"><label for="nombre">Nombre completo *</label><input id="nombre" name="nombre" required></div>
+                <div class="campo"><label for="telefono">Teléfono *</label><input id="telefono" name="telefono" type="tel" required></div>
+                <div class="campo completo"><label for="direccion">Dirección</label><input id="direccion" name="direccion"></div>
+                <div class="campo"><label for="cp">Código postal</label><input id="cp" name="cp" inputmode="numeric"></div>
+                <div class="campo"><label for="ciudad">Ciudad</label><input id="ciudad" name="ciudad"></div>
+                <div class="campo"><label for="estado">Estado</label><input id="estado" name="estado"></div>
+
+                <div class="intereses">
+                    <div class="intereses-titulo">¿En qué productos estás interesado?</div>
+                    <div class="chips">
+                        <label class="chip"><input type="checkbox" name="int" value="Faros LED rectangulares"> Faros LED</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Faros de niebla LED"> Faros de niebla</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Tira LED RGB"> Tira LED RGB</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Cubretuercas cromados"> Cubretuercas</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Luz piloto / Plafón"> Luz piloto</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Plumas limpiaparabrisas"> Plumas</label>
+                        <label class="chip"><input type="checkbox" name="int" value="Otros"> Otros</label>
+                    </div>
+                </div>
+
+                <div class="campo completo"><label for="esperas">¿Qué esperas al contactarnos?</label><textarea id="esperas" name="esperas" placeholder="Cuéntanos qué necesitas..."></textarea></div>
+            </div>
+            <button type="submit" class="boton boton-rojo" id="btnRegistro">Registrarme</button>
+            <p id="avisoRegistro" class="registro-aviso"></p>
+        </form>
+
+        <div id="exitoRegistro" class="exito">
+            <p>¡Registro exitoso! 🎉 Tu número de cliente es:</p>
+            <div class="num" id="numAsignado">—</div>
+            <p>Guárdalo para tus próximas consultas.</p>
         </div>
     </section>
 
@@ -214,6 +284,63 @@
     <footer>© 2026 Distribuidora Automotriz JARI · Todos los derechos reservados</footer>
 
     <script>
+        /* ===========================================================
+           CONEXIÓN CON GOOGLE (base de datos / Excel)
+           Pega aquí la URL de tu aplicación de Google Apps Script.
+           (Se obtiene al "Implementar > Nueva implementación".)
+        =========================================================== */
+        const SCRIPT_URL = 'PEGA_AQUI_LA_URL_DE_GOOGLE';
+
+        function enviarRegistro(ev) {
+            ev.preventDefault();
+            var form = document.getElementById('formRegistro');
+            var btn = document.getElementById('btnRegistro');
+            var aviso = document.getElementById('avisoRegistro');
+
+            if (SCRIPT_URL.indexOf('PEGA_AQUI') === 0) {
+                aviso.style.color = '#b3171d';
+                aviso.textContent = 'Falta conectar la base de datos: configura la URL de Google (SCRIPT_URL).';
+                return false;
+            }
+
+            var intereses = Array.prototype.slice
+                .call(form.querySelectorAll('input[name="int"]:checked'))
+                .map(function (c) { return c.value; }).join(', ');
+
+            var datos = new URLSearchParams();
+            datos.append('nombre', form.nombre.value.trim());
+            datos.append('telefono', form.telefono.value.trim());
+            datos.append('direccion', form.direccion.value.trim());
+            datos.append('cp', form.cp.value.trim());
+            datos.append('ciudad', form.ciudad.value.trim());
+            datos.append('estado', form.estado.value.trim());
+            datos.append('productos', intereses);
+            datos.append('esperas', form.esperas.value.trim());
+
+            btn.disabled = true; btn.textContent = 'Enviando...';
+            aviso.style.color = ''; aviso.textContent = '';
+
+            fetch(SCRIPT_URL, { method: 'POST', body: datos })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.ok) {
+                        document.getElementById('numAsignado').textContent = res.numCliente;
+                        form.style.display = 'none';
+                        var exito = document.getElementById('exitoRegistro');
+                        exito.style.display = 'block';
+                        exito.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    } else {
+                        throw new Error(res.error || 'Error desconocido');
+                    }
+                })
+                .catch(function (err) {
+                    btn.disabled = false; btn.textContent = 'Registrarme';
+                    aviso.style.color = '#b3171d';
+                    aviso.textContent = 'No se pudo enviar. Revisa tu conexión. (' + err.message + ')';
+                });
+            return false;
+        }
+
         function consultarCliente() {
             var input = document.getElementById('numCliente');
             var aviso = document.getElementById('avisoCliente');
