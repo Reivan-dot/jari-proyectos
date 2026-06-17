@@ -40,7 +40,7 @@ function asegurarEncabezados(hoja) {
       'N° Usuario', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
       'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
       'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil', 'N° Cliente',
-      'Vendedor', 'Frecuencia de entradas', 'Frecuencia de compras'
+      'Vendedor', 'Frecuencia de entradas', 'Frecuencia de compras', 'Usos carga Excel'
     ]);
   }
 }
@@ -89,6 +89,24 @@ function doPost(e) {
         }
       }
       return json({ ok: false, error: 'Número o contraseña incorrectos.' });
+    }
+
+    // ---------- REGISTRAR USO DE CARGA EXCEL (columna T = 20) ----------
+    if (accion === 'registrarUsoExcel') {
+      var numExc = (d.numero || '').trim();
+      if (numExc) {
+        var ultimoExc = hoja.getLastRow();
+        if (ultimoExc >= 2) {
+          var filasExc = hoja.getRange(2, 1, ultimoExc - 1, 20).getValues();
+          for (var fe = 0; fe < filasExc.length; fe++) {
+            if (String(filasExc[fe][0]).trim() === numExc) {
+              hoja.getRange(fe + 2, 20).setValue((Number(filasExc[fe][19]) || 0) + 1);
+              break;
+            }
+          }
+        }
+      }
+      return json({ ok: true });
     }
 
     // ---------- REGISTRAR VISITA (incrementa Frecuencia de entradas) ----------

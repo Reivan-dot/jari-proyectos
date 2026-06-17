@@ -146,6 +146,24 @@
         .pendiente-box .btn-salir { background:var(--rojo); border:none; color:#fff; padding:12px 28px; border-radius:8px; font-family:'Oswald',sans-serif; font-size:1rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:18px; }
         .pendiente-box .btn-salir:hover { background:var(--rojo-osc); }
 
+        /* ===== ZONA EXCEL ===== */
+        .excel-zona { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; max-width:680px; margin:14px auto 0; padding:0 20px; }
+        .excel-zona .etq { font-size:.75rem; color:#667; font-weight:600; text-transform:uppercase; letter-spacing:1px; }
+        .btn-excel { border:none; border-radius:8px; padding:10px 18px; cursor:pointer; font-family:'Oswald',sans-serif; font-size:.85rem; letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; }
+        .btn-excel-dl { background:var(--azul); color:#fff; }
+        .btn-excel-dl:hover { background:var(--azul-osc); }
+        .btn-excel-up { background:#1a9e4a; color:#fff; }
+        .btn-excel-up:hover { background:#158040; }
+        /* ===== MODAL DE REPORTE EXCEL ===== */
+        .rep-seccion { padding:10px 0; border-bottom:1px solid #eef0f7; }
+        .rep-seccion:last-child { border-bottom:none; }
+        .rep-tit { font-weight:700; font-size:.88rem; margin-bottom:6px; }
+        .rep-ok .rep-tit { color:#1a9e4a; }
+        .rep-warn .rep-tit { color:#c47d00; }
+        .rep-err .rep-tit { color:var(--rojo); }
+        .rep-row { font-size:.8rem; color:#556; padding:2px 0 2px 14px; }
+        .rep-cod { background:#eef0f7; border-radius:4px; padding:1px 5px; font-size:.72rem; color:#667; margin-left:4px; }
+
         @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.15rem; } }
 
         /* ===== EN CELULAR: tarjetas compactas con foto chica (~1/8 del área) ===== */
@@ -190,6 +208,14 @@
         <img src="logojari.png" alt="Distribuidora Automotriz JARI">
         <h1>Catálogo de <span>Productos</span></h1>
         <div class="buscador"><input type="text" id="buscar" placeholder="🔎 Buscar por código, nombre o descripción..." oninput="render()"></div>
+    </div>
+
+    <!-- Zona de pedido desde Excel -->
+    <div class="excel-zona" id="excelZona" hidden>
+        <span class="etq">📊 Pedido desde Excel</span>
+        <button class="btn-excel btn-excel-dl" onclick="descargarPlantilla()">⬇ Descargar plantilla</button>
+        <button class="btn-excel btn-excel-up" onclick="document.getElementById('fileExcel').click()">📥 Cargar mi pedido</button>
+        <input type="file" id="fileExcel" accept=".xlsx,.xls,.csv" style="display:none" onchange="importarExcel(this)">
     </div>
 
     <div class="estado-carga" id="estadoCarga">Cargando productos...</div>
@@ -242,6 +268,20 @@
             <div class="modal-botones">
                 <button class="btn-cancelar" onclick="cancelarPedido()">✖ Cancelar</button>
                 <button class="btn-aceptar" onclick="confirmarPedido()">✓ Aceptar y enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: reporte de importación desde Excel -->
+    <div class="modal-bg" id="modalReporteExcel" hidden>
+        <div class="modal">
+            <h2>Reporte del pedido cargado</h2>
+            <p class="modal-aviso">Resultados de la importación desde Excel.</p>
+            <div class="modal-items" id="repExcelItems"></div>
+            <div class="modal-total">Total agregado: <strong>$<span id="repExcelTotal">0.00</span> <small>MXN</small></strong></div>
+            <div class="modal-botones">
+                <button class="btn-cancelar" onclick="limpiarPedidoExcel()">✖ Limpiar pedido</button>
+                <button class="btn-aceptar" onclick="document.getElementById('modalReporteExcel').hidden=true">✓ Ver pedido</button>
             </div>
         </div>
     </div>
@@ -327,9 +367,162 @@
             POR_CODIGO = {};
             PRODUCTOS.forEach(function (p) { POR_CODIGO[String(p.codigo)] = p; });
             document.getElementById('estadoCarga').style.display = 'none';
+            document.getElementById('excelZona').hidden = false; // muestra botones Excel
             render();
             cargarSugeridos();
             cargarPedidos();
+        }
+
+        /* =================== PEDIDO DESDE EXCEL =================== */
+        var XLSXlib = null; // SheetJS — se carga solo al primer uso
+
+        function cargarSheetJS(cb) {
+            if (XLSXlib) { cb(); return; }
+            var s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+            s.onload = function () { XLSXlib = XLSX; cb(); };
+            s.onerror = function () { alert('No se pudo cargar la librería de Excel.\nVerifica tu conexión a Internet.'); };
+            document.head.appendChild(s);
+        }
+
+        // Descarga un .xlsx con todos los productos del catálogo para que el cliente llene cantidades
+        function descargarPlantilla() {
+            cargarSheetJS(function () {
+                var filas = [
+                    ['PLANTILLA DE PEDIDO — DISTRIBUIDORA AUTOMOTRIZ JARI'],
+                    [''],
+                    ['INSTRUCCIONES:'],
+                    ['1. Escribe la cantidad que deseas en la columna CANTIDAD (columna D).'],
+                    ['2. Deja en 0 los productos que no quieres.'],
+                    ['3. Guarda el archivo y súbelo con el botón "Cargar mi pedido".'],
+                    [''],
+                    ['CÓDIGO', 'NOMBRE', 'PRECIO', 'CANTIDAD']
+                ];
+                PRODUCTOS.forEach(function (p) {
+                    filas.push([p.codigo, p.nombre, p.precio, 0]);
+                });
+
+                var ws = XLSXlib.utils.aoa_to_sheet(filas);
+                ws['!cols'] = [{ wch: 10 }, { wch: 40 }, { wch: 10 }, { wch: 12 }];
+                var wb = XLSXlib.utils.book_new();
+                XLSXlib.utils.book_append_sheet(wb, ws, 'Pedido');
+                XLSXlib.writeFile(wb, 'Plantilla_Pedido_JARI.xlsx');
+            });
+        }
+
+        // Abre el archivo Excel cargado por el cliente
+        function importarExcel(input) {
+            if (!input.files || !input.files[0]) return;
+            var file = input.files[0];
+            input.value = '';
+            cargarSheetJS(function () {
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        var wb = XLSXlib.read(e.target.result, { type: 'array' });
+                        var ws = wb.Sheets[wb.SheetNames[0]];
+                        var rows = XLSXlib.utils.sheet_to_json(ws, { header: 1, defval: '' });
+                        procesarFilasExcel(rows);
+                    } catch (err) {
+                        alert('Error al leer el archivo: ' + err.message);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function procesarFilasExcel(rows) {
+            // Busca la fila de encabezados que contenga "código" y "cantidad"
+            var headerRow = -1, colCod = -1, colCant = -1;
+            for (var r = 0; r < rows.length; r++) {
+                colCod = -1; colCant = -1;
+                for (var c = 0; c < rows[r].length; c++) {
+                    var cell = String(rows[r][c]).toLowerCase().trim()
+                                .normalize('NFD').replace(/[̀-ͯ]/g, ''); // quita tildes
+                    if (cell === 'codigo' || cell === 'code') colCod = c;
+                    if (cell === 'cantidad' || cell === 'qty' || cell === 'quantity') colCant = c;
+                }
+                if (colCod >= 0 && colCant >= 0) { headerRow = r; break; }
+            }
+
+            if (headerRow < 0) {
+                alert('No encontré los encabezados "CÓDIGO" y "CANTIDAD".\n\nUsa la plantilla oficial de JARI (botón "Descargar plantilla").');
+                return;
+            }
+
+            var agregados = [], noEncontrados = [], sinExistencia = [], total = 0;
+
+            for (var i = headerRow + 1; i < rows.length; i++) {
+                var cod = String(rows[i][colCod] || '').trim();
+                var cantRaw = Number(rows[i][colCant]);
+                if (!cod || isNaN(cantRaw) || cantRaw <= 0) continue;
+
+                var p = POR_CODIGO[cod];
+                if (!p) { noEncontrados.push(cod); continue; }
+
+                // Sin existencia
+                if (p.existencia !== null && p.existencia !== undefined && p.existencia <= 0) {
+                    sinExistencia.push(p.nombre + ' (' + cod + ')'); continue;
+                }
+                // Limitar al tope de existencia
+                var cant = Math.round(cantRaw);
+                if (p.existencia !== null && p.existencia !== undefined && cant > p.existencia) {
+                    cant = p.existencia;
+                }
+
+                CANT[cod] = (CANT[cod] || 0) + cant; // acumula sin borrar lo que ya había
+                total += cant * p.precio;
+                agregados.push({ p: p, cant: cant });
+            }
+
+            sincronizar();
+            recalcular();
+            render();
+            mostrarReporteExcel(agregados, noEncontrados, sinExistencia, total);
+
+            // Contar uso de esta función (columna T en Google Sheets)
+            if (cliente && cliente.numero) {
+                var v = new URLSearchParams();
+                v.append('accion', 'registrarUsoExcel');
+                v.append('numero', cliente.numero);
+                fetch(SCRIPT_URL, { method: 'POST', body: v }).catch(function () {});
+            }
+        }
+
+        function mostrarReporteExcel(agregados, noEncontrados, sinExistencia, total) {
+            var html = '';
+            if (agregados.length) {
+                html += '<div class="rep-seccion rep-ok"><div class="rep-tit">✅ ' + agregados.length + ' producto(s) agregado(s)</div>';
+                agregados.forEach(function (it) {
+                    html += '<div class="rep-row">' + it.cant + ' × ' + esc(it.p.nombre) + ' <span class="rep-cod">' + esc(it.p.codigo) + '</span></div>';
+                });
+                html += '</div>';
+            }
+            if (noEncontrados.length) {
+                html += '<div class="rep-seccion rep-warn"><div class="rep-tit">⚠️ ' + noEncontrados.length + ' código(s) no encontrado(s) en el catálogo</div>';
+                noEncontrados.forEach(function (cod) { html += '<div class="rep-row">' + esc(cod) + '</div>'; });
+                html += '</div>';
+            }
+            if (sinExistencia.length) {
+                html += '<div class="rep-seccion rep-err"><div class="rep-tit">❌ Sin existencia (no se agregaron)</div>';
+                sinExistencia.forEach(function (d) { html += '<div class="rep-row">' + esc(d) + '</div>'; });
+                html += '</div>';
+            }
+            if (!agregados.length && !noEncontrados.length && !sinExistencia.length) {
+                html = '<p style="color:#778;padding:10px 0;">El archivo no tenía cantidades mayores a 0.</p>';
+            }
+            document.getElementById('repExcelItems').innerHTML = html;
+            document.getElementById('repExcelTotal').textContent = fmt(total);
+            document.getElementById('modalReporteExcel').hidden = false;
+        }
+
+        // "Limpiar pedido" en el reporte: borra CANT y re-renderiza
+        function limpiarPedidoExcel() {
+            CANT = {};
+            sincronizar();
+            recalcular();
+            render();
+            document.getElementById('modalReporteExcel').hidden = true;
         }
 
         /* =================== TARJETA DE PRODUCTO (reutilizable) =================== */
