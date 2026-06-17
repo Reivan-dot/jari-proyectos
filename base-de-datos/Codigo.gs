@@ -192,12 +192,13 @@ function doGet(e) {
     var ultPer = shPer.getLastRow();
     var codigos = [];
     if (ultPer >= 2) {
-      // Columnas: perfil | codigos (códigos separados por coma)
+      // Columnas: perfil | codigos (códigos separados por coma, espacio o ;)
       var valsPer = shPer.getRange(2, 1, ultPer - 1, 2).getValues();
       for (var j = 0; j < valsPer.length; j++) {
         if (String(valsPer[j][0]).trim().toLowerCase() === perfil) {
-          String(valsPer[j][1]).split(',').forEach(function (c) {
-            c = c.trim(); if (c) codigos.push(c);
+          String(valsPer[j][1]).split(/[,;\s]+/).forEach(function (c) {
+            c = c.replace(/["']/g, '').trim(); // quita comillas y espacios
+            if (c) codigos.push(c);
           });
         }
       }
