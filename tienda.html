@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda — Distribuidora Automotriz JARI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --azul:#1b2456; --azul-osc:#141b42; --rojo:#d61f26; --rojo-osc:#b3171d; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background:#eef0f7; color:var(--azul); font-family:'Montserrat',Arial,sans-serif; }
+
+        /* ===== BARRA SUPERIOR (total a la izquierda, cliente a la derecha) ===== */
+        .topbar {
+            position: sticky; top: 0; z-index: 100; background: var(--azul-osc); color:#fff;
+            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;
+            gap: 10px; padding: 12px 20px; box-shadow: 0 2px 12px rgba(0,0,0,.3);
+        }
+        .total-box { font-family:'Oswald',sans-serif; }
+        .total-box .etq { font-size:.7rem; letter-spacing:1px; text-transform:uppercase; color:#aeb4d6; display:block; }
+        .total-box .val { font-size:1.7rem; font-weight:700; color:#fff; }
+        .total-box .val span { color: #6be26b; }
+        .cliente-box { display:flex; align-items:center; gap:14px; }
+        .cliente-box .nombre { font-weight:600; }
+        .cliente-box .nombre small { display:block; font-weight:300; color:#aeb4d6; font-size:.72rem; }
+        .btn-salir { background:transparent; border:1.5px solid #aeb4d6; color:#fff; padding:7px 16px; border-radius:6px; cursor:pointer; font-size:.78rem; text-transform:uppercase; letter-spacing:1px; }
+        .btn-salir:hover { background:var(--rojo); border-color:var(--rojo); }
+
+        /* ===== ENCABEZADO TIENDA ===== */
+        .cabecera { text-align:center; padding: 30px 20px 8px; }
+        .cabecera img { height: 60px; }
+        .cabecera h1 { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; margin-top:10px; font-size:1.5rem; }
+        .cabecera h1 span { color:var(--rojo); }
+
+        /* ===== GRID DE PRODUCTOS ===== */
+        .catalogo {
+            display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 20px; max-width: 1100px; margin: 24px auto 120px; padding: 0 20px;
+        }
+        .card { background:#fff; border-radius:14px; overflow:hidden; box-shadow:0 6px 16px rgba(27,36,86,.10); display:flex; flex-direction:column; }
+        .card img { width:100%; height:180px; object-fit:contain; background:#fafafa; padding:10px; }
+        .card .info { padding:16px; display:flex; flex-direction:column; flex:1; }
+        .card .cod { font-size:.7rem; color:#9aa; letter-spacing:1px; }
+        .card h3 { font-size:1rem; color:var(--azul); margin:2px 0 6px; }
+        .card .desc { font-size:.83rem; color:#666; font-weight:300; flex:1; }
+        .card .precio { font-family:'Oswald',sans-serif; font-size:1.5rem; color:var(--rojo); font-weight:700; margin-top:10px; }
+        .card .medida { font-size:.75rem; color:#888; text-transform:uppercase; letter-spacing:1px; }
+        .qty { display:flex; align-items:center; gap:8px; margin-top:14px; }
+        .qty button { width:34px; height:34px; border:none; border-radius:8px; background:var(--azul); color:#fff; font-size:1.2rem; cursor:pointer; }
+        .qty button:hover { background:var(--rojo); }
+        .qty input { width:56px; height:34px; text-align:center; border:2px solid #cfd4e8; border-radius:8px; font-size:1rem; font-family:inherit; }
+
+        /* ===== BARRA INFERIOR (enviar pedido) ===== */
+        .pedido-bar {
+            position: fixed; bottom:0; left:0; right:0; background:#fff; box-shadow:0 -2px 14px rgba(0,0,0,.12);
+            display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 20px; flex-wrap:wrap;
+        }
+        .pedido-bar .resumen { font-family:'Oswald',sans-serif; }
+        .pedido-bar .resumen .grande { font-size:1.5rem; color:var(--rojo); font-weight:700; }
+        .btn-pedido { background:#25D366; color:#fff; border:none; padding:14px 26px; border-radius:8px; font-family:'Oswald',sans-serif; font-size:1rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+        .btn-pedido:hover { background:#1da851; }
+        .btn-pedido:disabled { background:#bbb; cursor:not-allowed; }
+
+        @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.2rem; } }
+    </style>
+</head>
+<body>
+
+    <!-- Barra superior: TOTAL a la izquierda, cliente a la derecha -->
+    <div class="topbar">
+        <div class="total-box">
+            <span class="etq">Total del pedido</span>
+            <span class="val">$<span id="totalArriba">0.00</span></span>
+        </div>
+        <div class="cliente-box">
+            <div class="nombre" id="nombreCliente">Cliente<small id="numeroCliente"></small></div>
+            <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+        </div>
+    </div>
+
+    <div class="cabecera">
+        <img src="logojari.png" alt="Distribuidora Automotriz JARI">
+        <h1>Catálogo de <span>Productos</span></h1>
+    </div>
+
+    <div class="catalogo" id="catalogo"><!-- se llena con JavaScript --></div>
+
+    <!-- Barra inferior: resumen + enviar pedido -->
+    <div class="pedido-bar">
+        <div class="resumen">
+            <span id="totalArticulos">0</span> artículo(s) · Total: <span class="grande">$<span id="totalAbajo">0.00</span></span>
+        </div>
+        <button class="btn-pedido" id="btnPedido" onclick="enviarPedido()" disabled>📲 Enviar pedido por WhatsApp</button>
+    </div>
+
+    <script>
+        /* ====== CONFIGURACIÓN ====== */
+        var WHATSAPP = '526672161558'; // tu número
+        var MONEDA = 'MXN';
+
+        /* ======================================================================
+           CATÁLOGO DE PRODUCTOS  (EJEMPLO — luego pondremos tus precios reales)
+           Cada producto: codigo, nombre, descripcion, precio, medida, img
+        ====================================================================== */
+        var PRODUCTOS = [
+            { codigo:'756',    nombre:'Faros LED Rectangulares', descripcion:'Alta luminosidad, 6 pulgadas.', precio:850.00, medida:'Par',   img:'756.png' },
+            { codigo:'109529', nombre:'Faros de Niebla LED',     descripcion:'"Devil\'s Eye" con colores RGB y control.', precio:1200.00, medida:'Par', img:'109529.jpeg' },
+            { codigo:'4',      nombre:'Tira LED RGB',            descripcion:'Multicolor con control remoto, 5 m.', precio:320.00, medida:'Rollo', img:'4.png' },
+            { codigo:'109469', nombre:'Cubretuercas Cromados',   descripcion:'Acabado espejo para camión.', precio:45.00, medida:'Pieza', img:'109469.jpeg' },
+            { codigo:'109503', nombre:'Luz Piloto / Plafón',     descripcion:'LED rojo con base cromada.', precio:65.00, medida:'Pieza', img:'109503.jpeg' },
+            { codigo:'109521', nombre:'Plumas Limpiaparabrisas', descripcion:'Juego 14" + 22".', precio:180.00, medida:'Juego', img:'109521.jpeg' }
+        ];
+
+        /* ====== PROTEGER LA TIENDA: requiere haber iniciado sesión ====== */
+        var cliente = null;
+        try { cliente = JSON.parse(sessionStorage.getItem('jari_cliente')); } catch (e) {}
+        if (!cliente || !cliente.nombre) {
+            window.location.href = 'index.html#clientes';
+        } else {
+            document.getElementById('nombreCliente').childNodes[0].nodeValue = '👤 ' + cliente.nombre;
+            document.getElementById('numeroCliente').textContent = 'Cliente N° ' + cliente.numero;
+        }
+
+        function fmt(n) { return n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+        /* ====== DIBUJAR EL CATÁLOGO ====== */
+        var cont = document.getElementById('catalogo');
+        PRODUCTOS.forEach(function (p, i) {
+            var card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML =
+                '<img src="' + p.img + '" alt="' + p.nombre + '">' +
+                '<div class="info">' +
+                    '<span class="cod">CÓDIGO: ' + p.codigo + '</span>' +
+                    '<h3>' + p.nombre + '</h3>' +
+                    '<p class="desc">' + p.descripcion + '</p>' +
+                    '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + p.medida + '</span></div>' +
+                    '<div class="qty">' +
+                        '<button onclick="cambiar(' + i + ',-1)">−</button>' +
+                        '<input type="number" id="qty' + i + '" min="0" value="0" onchange="recalcular()" oninput="recalcular()">' +
+                        '<button onclick="cambiar(' + i + ',1)">+</button>' +
+                    '</div>' +
+                '</div>';
+            cont.appendChild(card);
+        });
+
+        function cambiar(i, delta) {
+            var inp = document.getElementById('qty' + i);
+            var v = parseInt(inp.value, 10) || 0;
+            v = Math.max(0, v + delta);
+            inp.value = v;
+            recalcular();
+        }
+
+        function recalcular() {
+            var total = 0, articulos = 0;
+            PRODUCTOS.forEach(function (p, i) {
+                var v = parseInt(document.getElementById('qty' + i).value, 10) || 0;
+                if (v < 0) { v = 0; document.getElementById('qty' + i).value = 0; }
+                total += v * p.precio;
+                articulos += v;
+            });
+            document.getElementById('totalArriba').textContent = fmt(total);
+            document.getElementById('totalAbajo').textContent = fmt(total);
+            document.getElementById('totalArticulos').textContent = articulos;
+            document.getElementById('btnPedido').disabled = (articulos === 0);
+        }
+
+        function enviarPedido() {
+            var lineas = [], total = 0;
+            PRODUCTOS.forEach(function (p, i) {
+                var v = parseInt(document.getElementById('qty' + i).value, 10) || 0;
+                if (v > 0) {
+                    var sub = v * p.precio;
+                    total += sub;
+                    lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub));
+                }
+            });
+            if (lineas.length === 0) return;
+            var msg = 'Hola, soy el cliente N° ' + cliente.numero + ' (' + cliente.nombre + ').\n' +
+                      'Quiero hacer este pedido:\n\n' + lineas.join('\n') +
+                      '\n\nTOTAL: $' + fmt(total) + ' ' + MONEDA;
+            window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+
+        function cerrarSesion() {
+            sessionStorage.removeItem('jari_cliente');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
