@@ -12,6 +12,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+        /* Garantiza que el atributo hidden oculte siempre, incluso si una regla
+           CSS del autor asigna display:flex o display:block al mismo elemento */
+        [hidden] { display: none !important; }
+
         :root { --azul:#1b2456; --azul-osc:#141b42; --rojo:#d61f26; --rojo-osc:#b3171d; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background:#eef0f7; color:var(--azul); font-family:'Montserrat',Arial,sans-serif; }
