@@ -450,7 +450,7 @@
                 return;
             }
 
-            var agregados = [], noEncontrados = [], sinExistencia = [], total = 0;
+            var agregados = [], noEncontrados = [], sinExistencia = [], faltantes = [], total = 0;
 
             for (var i = headerRow + 1; i < rows.length; i++) {
                 var cod = String(rows[i][colCod] || '').trim();
@@ -460,14 +460,21 @@
                 var p = POR_CODIGO[cod];
                 if (!p) { noEncontrados.push(cod); continue; }
 
-                // Sin existencia
-                if (p.existencia !== null && p.existencia !== undefined && p.existencia <= 0) {
-                    sinExistencia.push(p.nombre + ' (' + cod + ')'); continue;
+                var pedida = Math.round(cantRaw);
+                var hayStock = (p.existencia !== null && p.existencia !== undefined);
+
+                // Sin existencia (0): no se agrega, pero se registra como faltante completo
+                if (hayStock && p.existencia <= 0) {
+                    sinExistencia.push(p.nombre + ' (' + cod + ')');
+                    faltantes.push({ p: p, pedida: pedida, disponible: 0, falto: pedida });
+                    continue;
                 }
-                // Limitar al tope de existencia
-                var cant = Math.round(cantRaw);
-                if (p.existencia !== null && p.existencia !== undefined && cant > p.existencia) {
+
+                // Existencia parcial: se agrega lo disponible y se anota lo que faltó
+                var cant = pedida;
+                if (hayStock && pedida > p.existencia) {
                     cant = p.existencia;
+                    faltantes.push({ p: p, pedida: pedida, disponible: p.existencia, falto: pedida - p.existencia });
                 }
 
                 CANT[cod] = (CANT[cod] || 0) + cant; // acumula sin borrar lo que ya había
@@ -478,7 +485,7 @@
             sincronizar();
             recalcular();
             render();
-            mostrarReporteExcel(agregados, noEncontrados, sinExistencia, total);
+            mostrarReporteExcel(agregados, noEncontrados, sinExistencia, faltantes, total);
 
             // Contar uso de esta función (columna T en Google Sheets)
             if (cliente && cliente.numero) {
@@ -487,15 +494,41 @@
                 v.append('numero', cliente.numero);
                 fetch(SCRIPT_URL, { method: 'POST', body: v }).catch(function () {});
             }
+
+            // Guardar el reporte de faltantes en Google Sheets (hoja "Faltantes")
+            if (faltantes.length && cliente) {
+                var detalleFaltantes = faltantes.map(function (f) {
+                    return f.p.codigo + '|' + f.p.nombre + '|' + f.pedida + '|' + f.disponible + '|' + f.falto;
+                }).join('\n');
+                var vf = new URLSearchParams();
+                vf.append('accion', 'guardarFaltantes');
+                vf.append('numero', cliente.numero);
+                vf.append('numCliente', cliente.numCliente || '');
+                vf.append('nombre', cliente.nombre || '');
+                vf.append('faltantes', detalleFaltantes);
+                fetch(SCRIPT_URL, { method: 'POST', body: vf }).catch(function () {});
+            }
         }
 
-        function mostrarReporteExcel(agregados, noEncontrados, sinExistencia, total) {
+        var ULTIMOS_FALTANTES = []; // para poder descargar el reporte en Excel
+
+        function mostrarReporteExcel(agregados, noEncontrados, sinExistencia, faltantes, total) {
+            ULTIMOS_FALTANTES = faltantes || [];
             var html = '';
             if (agregados.length) {
                 html += '<div class="rep-seccion rep-ok"><div class="rep-tit">✅ ' + agregados.length + ' producto(s) agregado(s)</div>';
                 agregados.forEach(function (it) {
                     html += '<div class="rep-row">' + it.cant + ' × ' + esc(it.p.nombre) + ' <span class="rep-cod">' + esc(it.p.codigo) + '</span></div>';
                 });
+                html += '</div>';
+            }
+            if (faltantes && faltantes.length) {
+                html += '<div class="rep-seccion rep-warn"><div class="rep-tit">⚠️ ' + faltantes.length + ' producto(s) con existencia insuficiente</div>';
+                faltantes.forEach(function (f) {
+                    html += '<div class="rep-row">' + esc(f.p.nombre) + ' <span class="rep-cod">' + esc(f.p.codigo) + '</span><br>' +
+                            'Pediste <b>' + f.pedida + '</b>, hay <b>' + f.disponible + '</b>, faltaron <b style="color:var(--rojo)">' + f.falto + '</b></div>';
+                });
+                html += '<div class="rep-row" style="margin-top:6px;"><button class="btn-excel btn-excel-dl" style="padding:7px 14px;font-size:.78rem;" onclick="descargarFaltantes()">⬇ Descargar reporte de faltantes</button></div>';
                 html += '</div>';
             }
             if (noEncontrados.length) {
@@ -514,6 +547,34 @@
             document.getElementById('repExcelItems').innerHTML = html;
             document.getElementById('repExcelTotal').textContent = fmt(total);
             document.getElementById('modalReporteExcel').hidden = false;
+        }
+
+        // Descarga un .xlsx con el reporte de faltantes (fecha, cliente, productos)
+        function descargarFaltantes() {
+            if (!ULTIMOS_FALTANTES.length) return;
+            cargarSheetJS(function () {
+                var ahora = new Date();
+                var fechaTxt = ahora.toLocaleString('es-MX');
+                var filas = [
+                    ['REPORTE DE FALTANTES — DISTRIBUIDORA AUTOMOTRIZ JARI'],
+                    ['Fecha:', fechaTxt],
+                    ['Cliente:', cliente.nombre || ''],
+                    ['N° Cliente:', cliente.numCliente || '(sin asignar)'],
+                    ['N° Usuario:', cliente.numero || ''],
+                    [''],
+                    ['CÓDIGO', 'NOMBRE', 'CANTIDAD PEDIDA', 'DISPONIBLE', 'FALTARON']
+                ];
+                ULTIMOS_FALTANTES.forEach(function (f) {
+                    filas.push([f.p.codigo, f.p.nombre, f.pedida, f.disponible, f.falto]);
+                });
+                var ws = XLSXlib.utils.aoa_to_sheet(filas);
+                ws['!cols'] = [{ wch: 10 }, { wch: 40 }, { wch: 16 }, { wch: 12 }, { wch: 12 }];
+                var wb = XLSXlib.utils.book_new();
+                XLSXlib.utils.book_append_sheet(wb, ws, 'Faltantes');
+                var nombreArch = 'Faltantes_JARI_' + ahora.getFullYear() +
+                    ('0' + (ahora.getMonth() + 1)).slice(-2) + ('0' + ahora.getDate()).slice(-2) + '.xlsx';
+                XLSXlib.writeFile(wb, nombreArch);
+            });
         }
 
         // "Limpiar pedido" en el reporte: borra CANT y re-renderiza
