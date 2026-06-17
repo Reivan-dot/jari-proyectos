@@ -149,6 +149,11 @@
         .form-cliente input:focus { border-color: var(--rojo); }
         .form-cliente .boton { width: 100%; justify-content: center; }
         .aviso-cliente { color: #ffb3b6; font-size: 0.85rem; min-height: 18px; margin: 0; }
+        .separador-cliente {
+            max-width: 420px; margin: 38px auto 18px; text-align: center;
+            font-family: 'Oswald', sans-serif; text-transform: uppercase; letter-spacing: 1px;
+            font-size: 0.85rem; color: #aeb4d6; border-top: 1px solid #3a437a; padding-top: 20px;
+        }
 
         /* ===== CONTACTO ===== */
         .contacto { text-align: center; }
@@ -213,7 +218,9 @@
         <form id="formRegistro" class="form-registro" onsubmit="return enviarRegistro(event)">
             <div class="form-grid">
                 <div class="campo"><label for="nombre">Nombre completo *</label><input id="nombre" name="nombre" required></div>
+                <div class="campo"><label for="correo">Correo electrónico *</label><input id="correo" name="correo" type="email" required></div>
                 <div class="campo"><label for="telefono">Teléfono *</label><input id="telefono" name="telefono" type="tel" required></div>
+                <div class="campo"><label for="password">Contraseña *</label><input id="password" name="password" type="password" required></div>
                 <div class="campo completo"><label for="direccion">Dirección</label><input id="direccion" name="direccion"></div>
                 <div class="campo"><label for="cp">Código postal</label><input id="cp" name="cp" inputmode="numeric"></div>
                 <div class="campo"><label for="ciudad">Ciudad</label><input id="ciudad" name="ciudad"></div>
@@ -242,6 +249,7 @@
             <p>¡Registro exitoso! 🎉 Tu número de cliente es:</p>
             <div class="num" id="numAsignado">—</div>
             <p>Guárdalo para tus próximas consultas.</p>
+            <p style="margin-top:10px; font-size:0.9rem;">📧 Te enviamos un <strong>correo de verificación</strong>. Revisa tu bandeja (y la carpeta de spam).</p>
         </div>
     </section>
 
@@ -253,9 +261,18 @@
 
         <div class="form-cliente">
             <label for="numCliente">Número de cliente</label>
-            <input type="text" id="numCliente" inputmode="numeric" placeholder="Ej. 12345" autocomplete="off">
+            <input type="text" id="numCliente" inputmode="numeric" placeholder="Ej. 1001" autocomplete="off">
             <button type="button" class="boton boton-rojo" onclick="consultarCliente()">Consultar</button>
             <p id="avisoCliente" class="aviso-cliente"></p>
+        </div>
+
+        <div class="separador-cliente">¿No recuerdas tu número?</div>
+
+        <div class="form-cliente">
+            <label for="correoRec">Escribe tu correo y te lo enviamos</label>
+            <input type="email" id="correoRec" placeholder="tucorreo@ejemplo.com" autocomplete="off">
+            <button type="button" class="boton boton-blanco" onclick="recuperarCliente()">Enviar a mi correo</button>
+            <p id="avisoRec" class="aviso-cliente"></p>
         </div>
     </section>
 
@@ -308,7 +325,10 @@
                 .map(function (c) { return c.value; }).join(', ');
 
             var datos = new URLSearchParams();
+            datos.append('accion', 'registro');
             datos.append('nombre', form.nombre.value.trim());
+            datos.append('correo', form.correo.value.trim());
+            datos.append('password', form.password.value);
             datos.append('telefono', form.telefono.value.trim());
             datos.append('direccion', form.direccion.value.trim());
             datos.append('cp', form.cp.value.trim());
@@ -330,7 +350,9 @@
                         exito.style.display = 'block';
                         exito.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     } else {
-                        throw new Error(res.error || 'Error desconocido');
+                        btn.disabled = false; btn.textContent = 'Registrarme';
+                        aviso.style.color = '#b3171d';
+                        aviso.textContent = res.error || 'No se pudo completar el registro.';
                     }
                 })
                 .catch(function (err) {
@@ -339,6 +361,33 @@
                     aviso.textContent = 'No se pudo enviar. Revisa tu conexión. (' + err.message + ')';
                 });
             return false;
+        }
+
+        function recuperarCliente() {
+            var inp = document.getElementById('correoRec');
+            var aviso = document.getElementById('avisoRec');
+            var correo = inp.value.trim();
+            if (correo === '') {
+                aviso.style.color = '#ffb3b6';
+                aviso.textContent = 'Escribe tu correo electrónico.';
+                inp.focus();
+                return;
+            }
+            aviso.style.color = '#dfe2f2';
+            aviso.textContent = 'Enviando...';
+            var datos = new URLSearchParams();
+            datos.append('accion', 'recuperar');
+            datos.append('correo', correo);
+            fetch(SCRIPT_URL, { method: 'POST', body: datos })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    aviso.style.color = res.ok ? '#9be29b' : '#ffb3b6';
+                    aviso.textContent = res.ok ? res.mensaje : res.error;
+                })
+                .catch(function () {
+                    aviso.style.color = '#ffb3b6';
+                    aviso.textContent = 'No se pudo enviar. Intenta de nuevo.';
+                });
         }
 
         function consultarCliente() {

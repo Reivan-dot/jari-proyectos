@@ -43,8 +43,32 @@ Mándame esa URL por aquí y yo la pego en la página, o tú mismo:
 - Para descargarla como Excel: **Archivo → Descargar → Microsoft Excel (.xlsx)**.
 
 ## Columnas que se guardan
-N° Cliente · Fecha de registro · Nombre · Teléfono · Dirección · Código Postal ·
-Ciudad · Estado · Productos de interés · Qué espera al contactarnos
+N° Cliente · Fecha de registro · Nombre · Correo · Contraseña · Verificado ·
+Teléfono · Dirección · Código Postal · Ciudad · Estado ·
+Productos de interés · Qué espera al contactarnos · Token
 
-> Nota: si cambias el código más adelante, debes volver a **Implementar → Administrar
-> implementaciones → Editar → Nueva versión** para que los cambios tomen efecto.
+---
+
+## ⚠️ Si ya tenías el código anterior (ACTUALIZACIÓN)
+Como ahora se agregaron columnas nuevas (correo, contraseña, verificado…), haz esto:
+
+1. **Vacía la hoja:** borra TODAS las filas que tenga (incluida la de títulos y los
+   registros de prueba). La hoja debe quedar completamente vacía: así el código
+   crea de nuevo los títulos correctos en el orden nuevo.
+2. **Reemplaza el código:** en **Extensiones → Apps Script**, borra todo y pega de
+   nuevo el contenido actualizado de `Codigo.gs`. Guarda (💾).
+3. **Vuelve a publicar:** **Implementar → Administrar implementaciones →** (lápiz ✏️
+   Editar) **→ Versión: Nueva versión → Implementar**.
+   La URL **NO cambia**, sigue siendo la misma.
+4. **Autoriza otra vez los permisos:** ahora el código envía correos, así que Google
+   pedirá permiso para "enviar correo electrónico como tú". Acepta.
+
+## Funciones nuevas
+- **Correo de verificación:** al registrarse, el cliente recibe un correo con un
+  enlace para confirmar su correo (se marca "Sí" en la columna *Verificado*).
+- **Correo único:** no se puede registrar dos veces el mismo correo.
+- **Recuperar número:** si el cliente olvida su número, escribe su correo en la
+  página y recibe por correo su número de cliente y su contraseña.
+
+> 🔒 Nota de seguridad: la contraseña se guarda tal cual en tu hoja (para poder
+> reenviarla). No uses contraseñas importantes (de banco, etc.) aquí.

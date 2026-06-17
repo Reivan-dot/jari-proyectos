@@ -1,61 +1,138 @@
 /**
  * Distribuidora Automotriz JARI — Registro de clientes
- * Este código recibe los registros de la página web y los guarda
- * en tu hoja de Google (Excel), asignando un número de cliente y la fecha.
+ * Guarda los registros en tu hoja de Google (Excel), valida que el correo
+ * no se repita, envía correo de verificación y permite recuperar el número
+ * de cliente y la contraseña por correo.
  *
  * Cómo usarlo: ver el archivo INSTRUCCIONES.md
+ *
+ * Columnas de la hoja (en este orden):
+ * N° Cliente | Fecha de registro | Nombre | Correo | Contraseña | Verificado |
+ * Teléfono | Dirección | Código Postal | Ciudad | Estado |
+ * Productos de interés | Qué espera al contactarnos | Token
  */
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function asegurarEncabezados(hoja) {
+  if (hoja.getLastRow() === 0) {
+    hoja.appendRow([
+      'N° Cliente', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
+      'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
+      'Productos de interés', 'Qué espera al contactarnos', 'Token'
+    ]);
+  }
+}
+
+// Devuelve el número de fila si el correo ya existe, o -1 si no
+function buscarFilaPorCorreo(hoja, correo) {
+  var ultimo = hoja.getLastRow();
+  if (ultimo < 2) return -1;
+  var valores = hoja.getRange(2, 4, ultimo - 1, 1).getValues(); // columna D = Correo
+  for (var i = 0; i < valores.length; i++) {
+    if (String(valores[i][0]).trim().toLowerCase() === correo) return i + 2;
+  }
+  return -1;
+}
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
-  lock.waitLock(30000); // evita que dos registros choquen al mismo tiempo
+  lock.waitLock(30000);
   try {
     var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-
-    // Si la hoja está vacía, escribe los títulos de las columnas
-    if (hoja.getLastRow() === 0) {
-      hoja.appendRow([
-        'N° Cliente', 'Fecha de registro', 'Nombre', 'Teléfono',
-        'Dirección', 'Código Postal', 'Ciudad', 'Estado',
-        'Productos de interés', 'Qué espera al contactarnos'
-      ]);
-    }
+    asegurarEncabezados(hoja);
 
     var d = e.parameter;
+    var accion = d.accion || 'registro';
 
-    // El número de cliente empieza en 1001 y sube de uno en uno
-    var numCliente = 1000 + hoja.getLastRow();
+    // ---------- RECUPERAR NÚMERO Y CONTRASEÑA ----------
+    if (accion === 'recuperar') {
+      var correoR = (d.correo || '').trim().toLowerCase();
+      if (!correoR) return json({ ok: false, error: 'Escribe tu correo.' });
+      var fila = buscarFilaPorCorreo(hoja, correoR);
+      if (fila < 0) return json({ ok: false, error: 'No encontramos ese correo registrado.' });
+
+      var datos = hoja.getRange(fila, 1, 1, 5).getValues()[0];
+      var numC = datos[0], nombreC = datos[2], passC = datos[4];
+      MailApp.sendEmail({
+        to: correoR,
+        subject: 'Tu número de cliente — Distribuidora Automotriz JARI',
+        htmlBody:
+          '<p>Hola ' + nombreC + ',</p>' +
+          '<p>Tu <b>número de cliente</b> es: <b>' + numC + '</b></p>' +
+          '<p>Tu <b>contraseña</b> es: <b>' + passC + '</b></p>' +
+          '<p>— Distribuidora Automotriz JARI</p>'
+      });
+      return json({ ok: true, mensaje: 'Listo, te enviamos tu número y contraseña a tu correo.' });
+    }
+
+    // ---------- REGISTRO ----------
+    var correo = (d.correo || '').trim().toLowerCase();
+    if (!correo) return json({ ok: false, error: 'Falta el correo electrónico.' });
+
+    // Validar que el correo NO esté repetido
+    if (buscarFilaPorCorreo(hoja, correo) > 0) {
+      return json({ ok: false, error: 'Este correo ya está registrado. Usa otro o recupera tu número.' });
+    }
+
+    var numCliente = 1000 + hoja.getLastRow(); // primer cliente = 1001
     var fecha = new Date();
+    var token = Utilities.getUuid();
 
     hoja.appendRow([
-      numCliente,
-      fecha,
-      d.nombre || '',
-      d.telefono || '',
-      d.direccion || '',
-      d.cp || '',
-      d.ciudad || '',
-      d.estado || '',
-      d.productos || '',
-      d.esperas || ''
+      numCliente, fecha, d.nombre || '', correo, d.password || '', 'No',
+      d.telefono || '', d.direccion || '', d.cp || '', d.ciudad || '', d.estado || '',
+      d.productos || '', d.esperas || '', token
     ]);
 
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: true, numCliente: numCliente }))
-      .setMimeType(ContentService.MimeType.JSON);
+    // Enviar correo de verificación
+    var urlVerif = ScriptApp.getService().getUrl() + '?accion=verificar&token=' + token;
+    MailApp.sendEmail({
+      to: correo,
+      subject: 'Verifica tu correo — Distribuidora Automotriz JARI',
+      htmlBody:
+        '<p>Hola ' + (d.nombre || '') + ',</p>' +
+        '<p>Gracias por registrarte. Tu <b>número de cliente</b> es <b>' + numCliente + '</b>.</p>' +
+        '<p>Confirma tu correo haciendo clic aquí:</p>' +
+        '<p><a href="' + urlVerif + '">✅ Verificar mi correo</a></p>' +
+        '<p>— Distribuidora Automotriz JARI</p>'
+    });
+
+    return json({ ok: true, numCliente: numCliente });
 
   } catch (err) {
-    return ContentService
-      .createTextOutput(JSON.stringify({ ok: false, error: String(err) }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return json({ ok: false, error: String(err) });
   } finally {
     lock.releaseLock();
   }
 }
 
-// Permite abrir la URL en el navegador para comprobar que funciona
-function doGet() {
-  return ContentService
-    .createTextOutput(JSON.stringify({ ok: true, mensaje: 'Servicio JARI activo' }))
-    .setMimeType(ContentService.MimeType.JSON);
+// Verificación del correo (cuando el cliente da clic en el enlace)
+function doGet(e) {
+  var p = e.parameter || {};
+  if (p.accion === 'verificar' && p.token) {
+    var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var ultimo = hoja.getLastRow();
+    if (ultimo >= 2) {
+      var tokens = hoja.getRange(2, 14, ultimo - 1, 1).getValues(); // columna N = Token
+      for (var i = 0; i < tokens.length; i++) {
+        if (String(tokens[i][0]) === p.token) {
+          hoja.getRange(i + 2, 6).setValue('Sí'); // columna F = Verificado
+          return HtmlService.createHtmlOutput(
+            '<div style="font-family:Arial;text-align:center;padding:40px;">' +
+            '<h2>✅ Correo verificado</h2>' +
+            '<p>Gracias, tu correo quedó confirmado.</p>' +
+            '<p><b>Distribuidora Automotriz JARI</b></p></div>');
+        }
+      }
+    }
+    return HtmlService.createHtmlOutput(
+      '<div style="font-family:Arial;text-align:center;padding:40px;">' +
+      '<h2>Enlace no válido</h2><p>No encontramos ese código de verificación.</p></div>');
+  }
+  return json({ ok: true, mensaje: 'Servicio JARI activo' });
 }
