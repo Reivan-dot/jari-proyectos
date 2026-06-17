@@ -372,13 +372,20 @@
         function render() {
             var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
             var buscando = q.length > 0;
+            // Divide por espacios; cada palabra debe coincidir en al menos un campo
+            var palabras = buscando ? q.split(/\s+/).filter(function(w){ return w; }) : [];
             var html = '';
             PRODUCTOS.forEach(function (p) {
                 if (buscando) {
-                    var enNombre = String(p.nombre || '').toLowerCase().indexOf(q) >= 0;
-                    var enCodigo = String(p.codigo || '').toLowerCase().indexOf(q) >= 0;
-                    var enDesc   = String(p.descripcion || '').toLowerCase().indexOf(q) >= 0;
-                    if (!enNombre && !enCodigo && !enDesc) return;
+                    var haystack = [
+                        String(p.nombre || ''),
+                        String(p.codigo || ''),
+                        String(p.descripcion || '')
+                    ].join(' ').toLowerCase();
+                    // Todas las palabras deben encontrarse en el producto
+                    for (var i = 0; i < palabras.length; i++) {
+                        if (haystack.indexOf(palabras[i]) < 0) return;
+                    }
                 }
                 html += tarjeta(p);
             });
