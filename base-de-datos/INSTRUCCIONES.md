@@ -65,10 +65,21 @@ Mándame esa URL por aquí y yo la pego en la página, o tú mismo:
 | Q | Vendedor | **Tú** — escribe el nombre del vendedor asignado |
 | R | Frecuencia de entradas | Automático — cuántas veces entró a la tienda |
 | S | Frecuencia de compras | Automático — cuántos pedidos envió por WhatsApp |
+| T | Usos carga Excel | Automático — veces que usó "Cargar pedido" desde Excel |
+| U | Envío: Dirección | El cliente (botón "🚚 Instrucciones de envío") |
+| V | Envío: Referencias | El cliente |
+| W | Envío: Entre calles | El cliente |
+| X | Envío: C.P. | El cliente |
+| Y | Envío: Paquetería | El cliente |
+| Z | Envío: Convenio paquetería | El cliente |
+
+> **Datos de envío (U–Z):** el cliente los captura una vez desde la tienda (botón
+> **🚚 Instrucciones de envío**) y se guardan solos en estas columnas. Sirven para
+> coordinar la entrega y aparecen también en el mensaje de WhatsApp del pedido.
 
 > **Proporción entradas/compras:** puedes ver qué tan seguido el cliente pide vs. cuántas
-> veces entra. Para calcularlo en la misma hoja, añade una columna T con la fórmula
-> `=SI(S2=0,"—",TEXTO(R2/S2,"0.0")&" visitas/pedido")` y cópiala hacia abajo.
+> veces entra. Para calcularlo en la misma hoja, añade una columna libre (por ejemplo AA)
+> con la fórmula `=SI(S2=0,"—",TEXTO(R2/S2,"0.0")&" visitas/pedido")` y cópiala hacia abajo.
 
 ---
 

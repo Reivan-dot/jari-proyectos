@@ -10,16 +10,30 @@
  * N° Usuario | Fecha de registro | Nombre | Correo | Contraseña | Verificado |
  * Teléfono | Dirección | Código Postal | Ciudad | Estado |
  * Productos de interés | Qué espera al contactarnos | Token | Perfil | N° Cliente |
- * Vendedor | Frecuencia de entradas | Frecuencia de compras
+ * Vendedor | Frecuencia de entradas | Frecuencia de compras | Usos carga Excel |
+ * Envío: Dirección | Envío: Referencias | Envío: Entre calles | Envío: C.P. |
+ * Envío: Paquetería | Envío: Convenio paquetería
  *
  * Columnas de la hoja Productos:
- * codigo | nombre | descripcion | precio | medida | imagen | existencia
+ * codigo | nombre | descripcion | precio | medida | imagen | existencia |
+ * peso | medidas | oferta | precio_oferta
  */
 
 function json(obj) {
   return ContentService
     .createTextOutput(JSON.stringify(obj))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+// Normaliza la columna "oferta" de Productos a: 'remate', 'relampago', 'mes' o ''.
+// Acepta acentos y plurales (Remates, Relámpago, Ofertas del mes, etc.).
+function normalizarOferta(valor) {
+  var t = String(valor || '').toLowerCase()
+            .normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+  if (t.indexOf('remate') >= 0) return 'remate';
+  if (t.indexOf('relamp') >= 0) return 'relampago';
+  if (t.indexOf('mes') >= 0)    return 'mes';
+  return '';
 }
 
 /**
@@ -40,7 +54,9 @@ function asegurarEncabezados(hoja) {
       'N° Usuario', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
       'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
       'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil', 'N° Cliente',
-      'Vendedor', 'Frecuencia de entradas', 'Frecuencia de compras', 'Usos carga Excel'
+      'Vendedor', 'Frecuencia de entradas', 'Frecuencia de compras', 'Usos carga Excel',
+      'Envío: Dirección', 'Envío: Referencias', 'Envío: Entre calles', 'Envío: C.P.',
+      'Envío: Paquetería', 'Envío: Convenio paquetería'
     ]);
   }
 }
@@ -73,9 +89,11 @@ function doPost(e) {
       if (!num || !pass) return json({ ok: false, error: 'Faltan datos.' });
       var ultimoL = hoja.getLastRow();
       if (ultimoL < 2) return json({ ok: false, error: 'Número o contraseña incorrectos.' });
-      // Lee hasta la columna Q (17) = Vendedor (manual).
-      // Índices: 0=N°Usuario, 2=Nombre, 4=Contraseña, 6=Teléfono, 14=Perfil, 15=N° Cliente, 16=Vendedor
-      var filasL = hoja.getRange(2, 1, ultimoL - 1, 17).getValues();
+      // Lee hasta la columna Z (26) para incluir los datos de envío.
+      // Índices: 0=N°Usuario, 2=Nombre, 4=Contraseña, 6=Teléfono, 14=Perfil,
+      // 15=N° Cliente, 16=Vendedor, 20=Dir.envío, 21=Referencias, 22=Entre calles,
+      // 23=C.P. envío, 24=Paquetería, 25=Convenio paquetería
+      var filasL = hoja.getRange(2, 1, ultimoL - 1, 26).getValues();
       for (var k = 0; k < filasL.length; k++) {
         if (String(filasL[k][0]) === String(num) && String(filasL[k][4]) === String(pass)) {
           return json({
@@ -84,7 +102,15 @@ function doPost(e) {
             perfil: String(filasL[k][14] || ''),
             telefono: String(filasL[k][6] || ''),
             numCliente: String(filasL[k][15] || ''),
-            vendedor: String(filasL[k][16] || '')
+            vendedor: String(filasL[k][16] || ''),
+            envio: {
+              direccion: String(filasL[k][20] || ''),
+              referencias: String(filasL[k][21] || ''),
+              entreCalles: String(filasL[k][22] || ''),
+              cp: String(filasL[k][23] || ''),
+              paqueteria: String(filasL[k][24] || ''),
+              convenio: String(filasL[k][25] || '')
+            }
           });
         }
       }
@@ -101,6 +127,28 @@ function doPost(e) {
           for (var fe = 0; fe < filasExc.length; fe++) {
             if (String(filasExc[fe][0]).trim() === numExc) {
               hoja.getRange(fe + 2, 20).setValue((Number(filasExc[fe][19]) || 0) + 1);
+              break;
+            }
+          }
+        }
+      }
+      return json({ ok: true });
+    }
+
+    // ---------- GUARDAR INSTRUCCIONES DE ENVÍO (columnas U–Z) ----------
+    if (accion === 'guardarEnvio') {
+      var numEnv = (d.numero || '').trim();
+      if (numEnv) {
+        var ultimoEnv = hoja.getLastRow();
+        if (ultimoEnv >= 2) {
+          var colNums = hoja.getRange(2, 1, ultimoEnv - 1, 1).getValues();
+          for (var ie = 0; ie < colNums.length; ie++) {
+            if (String(colNums[ie][0]).trim() === numEnv) {
+              // Escribe las 6 columnas de envío (U=21 … Z=26) de una sola vez
+              hoja.getRange(ie + 2, 21, 1, 6).setValues([[
+                d.direccion || '', d.referencias || '', d.entreCalles || '',
+                d.cp || '', d.paqueteria || '', d.convenio || ''
+              ]]);
               break;
             }
           }
@@ -255,8 +303,9 @@ function doGet(e) {
     var ultimo = sh.getLastRow();
     var productos = [];
     if (ultimo >= 2) {
-      // Columnas: codigo | nombre | descripcion | precio | medida | imagen | existencia
-      var vals = sh.getRange(2, 1, ultimo - 1, 7).getValues();
+      // Columnas: codigo | nombre | descripcion | precio | medida | imagen |
+      //           existencia | peso | medidas | oferta | precio_oferta
+      var vals = sh.getRange(2, 1, ultimo - 1, 11).getValues();
       for (var i = 0; i < vals.length; i++) {
         var r = vals[i];
         if (r[0] === '' && r[1] === '') continue; // salta filas vacías
@@ -267,7 +316,11 @@ function doGet(e) {
           precio: Number(r[3]) || 0,
           medida: r[4],
           img: String(r[5]),
-          existencia: r[6] !== '' && r[6] !== null ? Number(r[6]) : null
+          existencia: r[6] !== '' && r[6] !== null ? Number(r[6]) : null,
+          peso: r[7] !== '' && r[7] !== null ? Number(r[7]) : null,
+          medidas: String(r[8] || ''),
+          oferta: normalizarOferta(r[9]),
+          precioOferta: r[10] !== '' && r[10] !== null ? Number(r[10]) : null
         });
       }
     }
