@@ -225,10 +225,17 @@
         }
         .btn-volver:hover { background: var(--rojo); }
 
-        /* ===== INFORMACIÓN DE PAGO ===== */
-        .pago-dato { padding:11px 20px; border-bottom:1px solid #eef0f7; }
-        .pago-dato .et { font-size:.7rem; text-transform:uppercase; letter-spacing:1px; color:#889; }
-        .pago-dato .vl { font-size:1.05rem; color:var(--azul); font-weight:600; word-break:break-word; }
+        /* ===== INFORMACIÓN DE PAGO Y MECÁNICA DE COMPRA ===== */
+        .pago-min { background:#fff3cd; border:2px solid #ffce3a; border-radius:10px; padding:11px 14px; margin:8px 20px; text-align:center; font-family:'Oswald',sans-serif; color:#9a6b00; font-size:.95rem; letter-spacing:.3px; }
+        .pago-h { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; color:var(--azul); font-size:.9rem; padding:14px 20px 4px; }
+        .pago-paso { padding:5px 20px; font-size:.84rem; color:#556; line-height:1.5; }
+        .pago-paso b { color:var(--azul); }
+        .pago-banco { margin:8px 20px; border:1px solid #e3e6f2; border-radius:10px; overflow:hidden; }
+        .pago-banco .bh { background:var(--azul); color:#fff; padding:8px 12px; font-family:'Oswald',sans-serif; letter-spacing:.5px; font-size:.92rem; }
+        .pago-banco .bt { font-size:.74rem; color:#778; padding:7px 12px 2px; }
+        .pago-banco .bd { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:7px 12px; border-top:1px solid #f0f1f8; font-size:.9rem; }
+        .pago-banco .bd .et { color:#889; white-space:nowrap; }
+        .pago-banco .bd .vl { font-weight:700; color:var(--azul); font-family:'Oswald',sans-serif; word-break:break-all; text-align:right; letter-spacing:.5px; }
 
         @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.15rem; } }
 
@@ -423,15 +430,38 @@
         var MONEDA = 'MXN';
         var RUTA_IMAGENES = ''; // si pones las fotos en una carpeta, ej: 'fotos/'
 
-        /* === DATOS DE PAGO (EDITA estos valores con los datos reales del negocio) === */
-        var DATOS_PAGO = [
-            { etiqueta:'Banco',        valor:'(escribe aquí tu banco)' },
-            { etiqueta:'Titular de la cuenta', valor:'(nombre del titular)' },
-            { etiqueta:'N° de cuenta', valor:'(número de cuenta)' },
-            { etiqueta:'CLABE interbancaria', valor:'(18 dígitos)' },
-            { etiqueta:'Tarjeta (depósito)', valor:'(opcional)' }
+        /* === INFORMACIÓN DE PAGO Y MECÁNICA DE COMPRA (edita aquí los datos reales) === */
+        var PAGO_MINIMO = 'Venta únicamente de MAYOREO: pedido mínimo de $4,000 en adelante.';
+
+        // Pasos de la mecánica de compra
+        var MECANICA_COMPRA = [
+            { t:'1. Selección de productos', d:'Consulta el catálogo y envía tu lista para cotización.' },
+            { t:'2. Proceder al pago',       d:'Proporciona tus datos fiscales o de venta. Aceptamos transferencias, OXXO y depósitos bancarios.' },
+            { t:'3. Confirmación de pago',   d:'Recibe la confirmación por WhatsApp.' },
+            { t:'4. Preparación y empaquetado', d:'Preparamos y embalamos tu pedido.' },
+            { t:'5. Envío y seguimiento',    d:'Recibe tu número de guía (tracking) para rastrear el envío.' }
         ];
-        var NOTA_PAGO = 'Envía tu comprobante de pago por WhatsApp para confirmar tu pedido. Los precios son de mayoreo.';
+
+        // Cuentas para depósito o transferencia
+        var CUENTAS_PAGO = [
+            {
+                banco:'BanBajío',
+                titular:'Distribuidora Automotriz JARI',
+                datos:[ ['No. de cuenta','152812640201'], ['CLABE','030730900007032644'] ]
+            },
+            {
+                banco:'Banorte',
+                titular:'Distribuidora Automotriz JARI S.A. de C.V.',
+                datos:[ ['No. de cuenta','0821623055'], ['CLABE interbancaria','072730008216230553'] ]
+            },
+            {
+                banco:'Santander PyME — solo EFECTIVO / depósito en OXXO',
+                titular:'Distribuidora Automotriz JARI',
+                datos:[ ['Tarjeta (Mastercard)','5579 0890 0171 5195'] ]
+            }
+        ];
+
+        var NOTA_PAGO = 'El costo de envío se calcula según el peso, tamaño y zona de entrega (las zonas extendidas tienen cargo extra) y es por caja. Envía tu comprobante de pago por WhatsApp para confirmar tu pedido.';
 
         /* === TARIFAS PARA ESTIMAR EL FLETE ===
            Valores de EJEMPLO. Cámbialos cuando tengas tus tablas reales.
@@ -1179,10 +1209,27 @@
         /* =================== INFORMACIÓN DE PAGO =================== */
         function abrirPago() {
             var html = '';
-            DATOS_PAGO.forEach(function (d) {
-                html += '<div class="pago-dato"><div class="et">' + esc(d.etiqueta) + '</div>' +
-                        '<div class="vl">' + esc(d.valor) + '</div></div>';
+            // Pedido mínimo (mayoreo)
+            html += '<div class="pago-min">🛒 ' + esc(PAGO_MINIMO) + '</div>';
+
+            // Mecánica de compra
+            html += '<div class="pago-h">🧭 Mecánica de compra</div>';
+            MECANICA_COMPRA.forEach(function (p) {
+                html += '<div class="pago-paso"><b>' + esc(p.t) + ':</b> ' + esc(p.d) + '</div>';
             });
+
+            // Cuentas para depósito / transferencia
+            html += '<div class="pago-h">🏦 Cuentas para depósito o transferencia</div>';
+            CUENTAS_PAGO.forEach(function (c) {
+                html += '<div class="pago-banco"><div class="bh">' + esc(c.banco) + '</div>' +
+                        '<div class="bt">Titular: ' + esc(c.titular) + '</div>';
+                c.datos.forEach(function (d) {
+                    html += '<div class="bd"><span class="et">' + esc(d[0]) + '</span>' +
+                            '<span class="vl">' + esc(d[1]) + '</span></div>';
+                });
+                html += '</div>';
+            });
+
             document.getElementById('pagoDatos').innerHTML = html;
             document.getElementById('pagoNota').textContent = NOTA_PAGO;
             document.getElementById('modalPago').hidden = false;
