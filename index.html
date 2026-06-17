@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Distribuidora Automotriz JARI</title>
-    <!-- Tipografías elegantes de Google Fonts -->
+    <meta name="description" content="Distribuidora Automotriz JARI — refacciones y distribución automotriz. Blvd. Zapata 2594 Pte, Col. Ind. El Palmito, C.P. 80160.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
@@ -14,97 +14,107 @@
             --oro-claro: #f4d97b;
             --negro: #0a0a0a;
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        * { box-sizing: border-box; }
-
-        html, body {
-            margin: 0;
-            min-height: 100%;
-        }
+        html { scroll-behavior: smooth; }
 
         body {
+            background: var(--negro);
+            color: #ffffff;
+            font-family: 'Montserrat', Arial, sans-serif;
+            line-height: 1.6;
+        }
+
+        a { color: inherit; }
+
+        /* ===== ENCABEZADO / PORTADA ===== */
+        .hero {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 40px 20px;
-            /* Fondo negro con un degradado sutil para dar profundidad */
+            padding: 60px 20px;
             background: radial-gradient(circle at 50% 30%, #1c1c1c 0%, var(--negro) 70%);
-            color: #ffffff;
-            font-family: 'Montserrat', Arial, sans-serif;
         }
-
-        /* ---- Logo dibujado en SVG (dorado) ---- */
         .logo {
-            width: 150px;
-            height: 150px;
-            margin-bottom: 28px;
+            width: 140px;
+            height: 140px;
+            margin-bottom: 26px;
             filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.35));
             animation: aparecer 1s ease-out;
         }
-
-        /* ---- Título principal ---- */
         h1 {
             font-family: 'Cinzel', serif;
             color: var(--oro);
             font-size: clamp(1.8rem, 6vw, 3.4rem);
             font-weight: 700;
             letter-spacing: 3px;
-            margin: 0;
             line-height: 1.2;
             text-shadow: 0 2px 18px rgba(212, 175, 55, 0.25);
             animation: aparecer 1.2s ease-out;
         }
-
-        /* Línea decorativa dorada bajo el título */
         .linea {
-            width: 90px;
-            height: 3px;
-            margin: 22px auto;
+            width: 90px; height: 3px; margin: 22px auto;
             background: linear-gradient(90deg, transparent, var(--oro), transparent);
         }
-
-        /* ---- Subtítulo / eslogan ---- */
         .eslogan {
             font-weight: 300;
-            font-size: clamp(0.9rem, 3vw, 1.15rem);
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            color: #d8d8d8;
-            margin: 0 0 36px;
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            font-style: italic;
+            color: var(--oro-claro);
+            max-width: 640px;
+            margin: 0 auto 36px;
             animation: aparecer 1.4s ease-out;
         }
 
-        /* ---- Botón de contacto ---- */
+        /* ===== BOTONES ===== */
+        .botones { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
         .boton {
-            display: inline-block;
-            padding: 14px 34px;
-            border: 1.5px solid var(--oro);
-            border-radius: 40px;
-            color: var(--oro);
-            text-decoration: none;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            transition: all 0.3s ease;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 14px 30px; border-radius: 40px;
+            text-decoration: none; font-weight: 600; letter-spacing: 1px;
+            text-transform: uppercase; font-size: 0.82rem;
+            transition: all 0.3s ease; cursor: pointer;
         }
-        .boton:hover {
-            background: var(--oro);
-            color: var(--negro);
-            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
-        }
+        .boton-oro { background: var(--oro); color: var(--negro); }
+        .boton-oro:hover { box-shadow: 0 6px 22px rgba(212,175,55,0.45); transform: translateY(-2px); }
+        .boton-linea { border: 1.5px solid var(--oro); color: var(--oro); }
+        .boton-linea:hover { background: var(--oro); color: var(--negro); }
 
-        /* ---- Pie de página ---- */
-        footer {
-            position: fixed;
-            bottom: 18px;
-            font-size: 0.75rem;
-            letter-spacing: 1px;
-            color: #777;
+        /* ===== SECCIONES ===== */
+        section { padding: 80px 20px; }
+        .titulo-seccion {
+            font-family: 'Cinzel', serif; color: var(--oro);
+            font-size: clamp(1.5rem, 4vw, 2.2rem); text-align: center;
+            letter-spacing: 2px; margin-bottom: 12px;
         }
+        .subtitulo-seccion { text-align: center; color: #bbb; margin-bottom: 48px; font-weight: 300; }
+
+        /* ===== PRODUCTOS ===== */
+        .productos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 22px; max-width: 1000px; margin: 0 auto;
+        }
+        .producto {
+            background: #141414; border: 1px solid #2a2a2a; border-radius: 14px;
+            padding: 30px 24px; text-align: center; transition: all 0.3s ease;
+        }
+        .producto:hover { border-color: var(--oro); transform: translateY(-4px); }
+        .producto .icono { font-size: 2.4rem; margin-bottom: 14px; }
+        .producto h3 { color: var(--oro); font-size: 1.05rem; letter-spacing: 1px; margin-bottom: 8px; }
+        .producto p { color: #aaa; font-size: 0.9rem; font-weight: 300; }
+
+        /* ===== CONTACTO / UBICACIÓN ===== */
+        .contacto { background: #0f0f0f; text-align: center; }
+        .datos { max-width: 560px; margin: 0 auto; }
+        .dato { margin-bottom: 22px; font-size: 1.05rem; }
+        .dato strong { color: var(--oro); display: block; letter-spacing: 1px; margin-bottom: 4px; font-size: 0.85rem; text-transform: uppercase; }
+
+        /* ===== PIE ===== */
+        footer { background: #000; text-align: center; padding: 28px 20px; color: #777; font-size: 0.8rem; letter-spacing: 1px; }
 
         @keyframes aparecer {
             from { opacity: 0; transform: translateY(18px); }
@@ -114,43 +124,79 @@
 </head>
 <body>
 
-    <!--
-      LOGO: Por ahora es un emblema dibujado en código (SVG).
-      Si tienes tu propio logo en imagen (por ejemplo "logo.png"),
-      sube el archivo al repositorio y reemplaza todo este bloque <svg>...</svg>
-      por esta línea:
-          <img class="logo" src="logo.png" alt="Logo JARI">
-    -->
-    <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Logo JARI">
-        <defs>
-            <linearGradient id="oro" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#f4d97b"/>
-                <stop offset="50%" stop-color="#D4AF37"/>
-                <stop offset="100%" stop-color="#b8860b"/>
-            </linearGradient>
-        </defs>
-        <!-- Aro exterior estilo volante / emblema -->
-        <circle cx="100" cy="100" r="92" fill="none" stroke="url(#oro)" stroke-width="4"/>
-        <circle cx="100" cy="100" r="80" fill="none" stroke="url(#oro)" stroke-width="1.5" opacity="0.6"/>
-        <!-- Alas laterales (estilo automotriz) -->
-        <path d="M30 100 q 18 -16 38 0 q -18 10 -38 0 Z" fill="url(#oro)"/>
-        <path d="M170 100 q -18 -16 -38 0 q 18 10 38 0 Z" fill="url(#oro)"/>
-        <!-- Iniciales JARI -->
-        <text x="100" y="118" text-anchor="middle"
-              font-family="Cinzel, serif" font-size="56" font-weight="700"
-              fill="url(#oro)" letter-spacing="2">JARI</text>
-    </svg>
+    <!-- ===================== PORTADA ===================== -->
+    <header class="hero">
+        <!--
+          LOGO: emblema dibujado en código (SVG). Para usar tu propia imagen,
+          sube "logo.png" al repositorio y reemplaza este bloque <svg>…</svg> por:
+              <img class="logo" src="logo.png" alt="Logo JARI">
+        -->
+        <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Logo JARI">
+            <defs>
+                <linearGradient id="oro" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stop-color="#f4d97b"/>
+                    <stop offset="50%" stop-color="#D4AF37"/>
+                    <stop offset="100%" stop-color="#b8860b"/>
+                </linearGradient>
+            </defs>
+            <circle cx="100" cy="100" r="92" fill="none" stroke="url(#oro)" stroke-width="4"/>
+            <circle cx="100" cy="100" r="80" fill="none" stroke="url(#oro)" stroke-width="1.5" opacity="0.6"/>
+            <path d="M30 100 q 18 -16 38 0 q -18 10 -38 0 Z" fill="url(#oro)"/>
+            <path d="M170 100 q -18 -16 -38 0 q 18 10 38 0 Z" fill="url(#oro)"/>
+            <text x="100" y="118" text-anchor="middle"
+                  font-family="Cinzel, serif" font-size="56" font-weight="700"
+                  fill="url(#oro)" letter-spacing="2">JARI</text>
+        </svg>
 
-    <h1>Distribuidora Automotriz JARI</h1>
+        <h1>Distribuidora Automotriz JARI</h1>
+        <div class="linea"></div>
+        <p class="eslogan">"Si tu camino quieres iluminar, con Distribuidora Automotriz JARI debes confiar."</p>
 
-    <div class="linea"></div>
+        <div class="botones">
+            <a class="boton boton-oro" href="https://wa.me/526672161558?text=Hola,%20me%20gustar%C3%ADa%20cotizar%20un%20producto" target="_blank" rel="noopener">📱 WhatsApp</a>
+            <a class="boton boton-linea" href="#productos">Ver productos</a>
+        </div>
+    </header>
 
-    <p class="eslogan">Repuestos y Distribución Automotriz</p>
+    <!-- ===================== PRODUCTOS ===================== -->
+    <section id="productos">
+        <h2 class="titulo-seccion">Nuestros Productos</h2>
+        <p class="subtitulo-seccion">Refacciones y accesorios para tu vehículo</p>
 
-    <!-- Cambia el número por tu WhatsApp real (formato: código de país + número) -->
-    <a class="boton" href="https://wa.me/000000000000" target="_blank" rel="noopener">Contáctanos</a>
+        <div class="productos">
+            <div class="producto"><div class="icono">🛢️</div><h3>Aceites y Lubricantes</h3><p>Para motor, transmisión y frenos.</p></div>
+            <div class="producto"><div class="icono">🔋</div><h3>Baterías</h3><p>Acumuladores para todo tipo de auto.</p></div>
+            <div class="producto"><div class="icono">🛞</div><h3>Llantas y Rines</h3><p>Variedad de medidas y marcas.</p></div>
+            <div class="producto"><div class="icono">🛑</div><h3>Frenos</h3><p>Balatas, discos y tambores.</p></div>
+            <div class="producto"><div class="icono">💨</div><h3>Filtros</h3><p>De aceite, aire y gasolina.</p></div>
+            <div class="producto"><div class="icono">⚡</div><h3>Eléctrico</h3><p>Bujías, focos y componentes.</p></div>
+            <div class="producto"><div class="icono">🔧</div><h3>Suspensión</h3><p>Amortiguadores y horquillas.</p></div>
+            <div class="producto"><div class="icono">✨</div><h3>Accesorios</h3><p>Limpieza y cuidado del auto.</p></div>
+        </div>
+    </section>
 
-    <footer>© 2026 Distribuidora Automotriz JARI</footer>
+    <!-- ===================== CONTACTO ===================== -->
+    <section class="contacto">
+        <h2 class="titulo-seccion">Visítanos</h2>
+        <p class="subtitulo-seccion">Estamos para servirte</p>
+
+        <div class="datos">
+            <div class="dato">
+                <strong>Dirección</strong>
+                Blvd. Zapata 2594 Pte., Col. Ind. El Palmito, C.P. 80160
+            </div>
+            <div class="dato">
+                <strong>WhatsApp / Teléfono</strong>
+                667 216 1558
+            </div>
+            <div class="botones">
+                <a class="boton boton-oro" href="https://wa.me/526672161558?text=Hola,%20me%20gustar%C3%ADa%20cotizar%20un%20producto" target="_blank" rel="noopener">📱 Escríbenos por WhatsApp</a>
+                <a class="boton boton-linea" href="https://www.google.com/maps/search/?api=1&query=Blvd.+Zapata+2594+Pte+Col+Ind+El+Palmito+80160" target="_blank" rel="noopener">📍 Cómo llegar</a>
+            </div>
+        </div>
+    </section>
+
+    <footer>© 2026 Distribuidora Automotriz JARI · Todos los derechos reservados</footer>
 
 </body>
 </html>
