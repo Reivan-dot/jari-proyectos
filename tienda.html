@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Evita que el navegador muestre una versión vieja en caché -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Tienda — Distribuidora Automotriz JARI</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -239,6 +243,12 @@
     </div>
 
     <script>
+        /* Si el navegador restaura la página desde la caché de "atrás/adelante"
+           (bfcache), la recarga para volver a validar la sesión y los precios. */
+        window.addEventListener('pageshow', function (e) {
+            if (e.persisted) window.location.reload();
+        });
+
         /* =================== CONFIGURACIÓN =================== */
         var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj_eRINwOroXb1aS3WZBYGNUd8z7nx86QHOUZ6g2Z98uIMl51PVyG4p6605SvePVOZ/exec';
         var WHATSAPP = '526672161558';
