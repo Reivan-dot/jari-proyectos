@@ -335,6 +335,12 @@
         /* =================== TARJETA DE PRODUCTO (reutilizable) =================== */
         function tarjeta(p) {
             var cant = CANT[p.codigo] || 0;
+            // Existencia: si es null/undefined no hay control de stock; si es 0 = bloqueado
+            var tieneExist = (p.existencia !== null && p.existencia !== undefined);
+            var sinExist   = tieneExist && p.existencia <= 0;
+            var maxAttr    = tieneExist ? ' max="' + p.existencia + '"' : '';
+            var inpDisabled = sinExist ? ' disabled' : '';
+            var btnMasDisabled = (sinExist || (tieneExist && cant >= p.existencia)) ? ' disabled' : '';
             return '' +
                 '<div class="card">' +
                     '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25" onclick="abrirFoto(this)" ontouchend="abrirFoto(this);event.preventDefault()" oncontextmenu="return false">' +
@@ -343,16 +349,16 @@
                         '<h3>' + esc(p.nombre) + '</h3>' +
                         '<p class="desc">' + esc(p.descripcion || '') + '</p>' +
                         '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + esc(p.medida) + '</span></div>' +
-                        (p.existencia !== null && p.existencia !== undefined
+                        (tieneExist
                             ? '<div class="exist ' + (p.existencia > 0 ? 'exist-ok' : 'exist-no') + '">' +
                               (p.existencia > 0 ? '✓ Existencia: ' + p.existencia : '✗ Sin existencia') + '</div>'
                             : '') +
                         '<div class="qty">' +
-                            '<button onclick="cambiar(\'' + esc(p.codigo) + '\',-1)">−</button>' +
-                            '<input type="number" min="0" data-cod="' + esc(p.codigo) + '" value="' + cant + '" ' +
+                            '<button' + inpDisabled + ' onclick="cambiar(\'' + esc(p.codigo) + '\',-1)">−</button>' +
+                            '<input type="number" min="0"' + maxAttr + inpDisabled + ' data-cod="' + esc(p.codigo) + '" value="' + cant + '" ' +
                                    'onchange="setCant(\'' + esc(p.codigo) + '\',this.value)" ' +
                                    'oninput="setCant(\'' + esc(p.codigo) + '\',this.value)">' +
-                            '<button onclick="cambiar(\'' + esc(p.codigo) + '\',1)">+</button>' +
+                            '<button' + btnMasDisabled + ' onclick="cambiar(\'' + esc(p.codigo) + '\',1)">+</button>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -420,24 +426,47 @@
         }
 
         /* =================== CANTIDADES (compartidas en todas las secciones) =================== */
+        // Limita la cantidad solicitada a la existencia disponible (si la hay).
+        // Si el usuario quiere más de lo que hay, muestra un aviso una sola vez.
+        function limitar(codigo, v) {
+            var p = POR_CODIGO[codigo];
+            if (!p) return v;
+            if (p.existencia === null || p.existencia === undefined) return v; // sin control
+            if (v <= p.existencia) return v;
+            if (p.existencia <= 0) alert('Sin existencia: este producto no se puede agregar.');
+            else alert('Solo hay ' + p.existencia + ' en existencia. Se ajustó a ese máximo.');
+            return p.existencia;
+        }
         function setCant(codigo, valor) {
             var v = parseInt(valor, 10); if (isNaN(v) || v < 0) v = 0;
+            v = limitar(codigo, v);
             CANT[codigo] = v;
             sincronizar();
             recalcular();
         }
         function cambiar(codigo, delta) {
             var v = (CANT[codigo] || 0) + delta; if (v < 0) v = 0;
+            v = limitar(codigo, v);
             CANT[codigo] = v;
             sincronizar();
             recalcular();
         }
         // Un mismo producto puede aparecer en varias secciones: deja todas sus casillas iguales
+        // y actualiza el estado del botón "+" cuando se llega al tope de existencia
         function sincronizar() {
             var inputs = document.querySelectorAll('input[data-cod]');
             for (var i = 0; i < inputs.length; i++) {
                 var c = inputs[i].getAttribute('data-cod');
-                inputs[i].value = CANT[c] || 0;
+                var v = CANT[c] || 0;
+                inputs[i].value = v;
+                var p = POR_CODIGO[c];
+                if (p && p.existencia !== null && p.existencia !== undefined) {
+                    // El input está seguido por el botón "+"; deshabilitarlo si alcanzó el tope
+                    var btnMas = inputs[i].nextElementSibling;
+                    if (btnMas && btnMas.tagName === 'BUTTON') {
+                        btnMas.disabled = (v >= p.existencia);
+                    }
+                }
             }
         }
 
@@ -499,7 +528,8 @@
                       'N° Cliente: ' + (cliente.numCliente || '(sin asignar)') + '\n' +
                       'N° Usuario: ' + cliente.numero + '\n' +
                       'Nombre: ' + cliente.nombre + '\n' +
-                      'Teléfono: ' + (cliente.telefono || '(sin registrar)') + '\n\n';
+                      'Teléfono: ' + (cliente.telefono || '(sin registrar)') + '\n' +
+                      'Vendedor: ' + (cliente.vendedor || '(sin asignar)') + '\n\n';
             var msg = encabezado + detalle +
                       '\n\nTOTAL: $' + fmt(ped.total) + ' ' + MONEDA;
 

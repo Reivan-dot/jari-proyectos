@@ -73,9 +73,9 @@ function doPost(e) {
       if (!num || !pass) return json({ ok: false, error: 'Faltan datos.' });
       var ultimoL = hoja.getLastRow();
       if (ultimoL < 2) return json({ ok: false, error: 'Número o contraseña incorrectos.' });
-      // Lee hasta la columna P (16) = N° Cliente (manual).
-      // Índices: 0=N°Usuario, 2=Nombre, 4=Contraseña, 6=Teléfono, 14=Perfil, 15=N° Cliente
-      var filasL = hoja.getRange(2, 1, ultimoL - 1, 16).getValues();
+      // Lee hasta la columna Q (17) = Vendedor (manual).
+      // Índices: 0=N°Usuario, 2=Nombre, 4=Contraseña, 6=Teléfono, 14=Perfil, 15=N° Cliente, 16=Vendedor
+      var filasL = hoja.getRange(2, 1, ultimoL - 1, 17).getValues();
       for (var k = 0; k < filasL.length; k++) {
         if (String(filasL[k][0]) === String(num) && String(filasL[k][4]) === String(pass)) {
           return json({
@@ -83,7 +83,8 @@ function doPost(e) {
             nombre: filasL[k][2],
             perfil: String(filasL[k][14] || ''),
             telefono: String(filasL[k][6] || ''),
-            numCliente: String(filasL[k][15] || '')
+            numCliente: String(filasL[k][15] || ''),
+            vendedor: String(filasL[k][16] || '')
           });
         }
       }
