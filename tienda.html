@@ -87,7 +87,12 @@
         }
         .lightbox[hidden] { display: none; }
         .lightbox img { max-width: 92vw; max-height: 88vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
-        .card img { cursor: zoom-in; }
+        .card img {
+            cursor: zoom-in;
+            -webkit-touch-callout: none; /* bloquea el menú al mantener presionado en iOS */
+            -webkit-user-select: none;
+            user-select: none;
+        }
 
         /* ===== VENTANA DE REVISIÓN DEL PEDIDO ===== */
         .modal-bg {
@@ -260,7 +265,7 @@
             var cant = CANT[p.codigo] || 0;
             return '' +
                 '<div class="card">' +
-                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25" onclick="abrirFoto(this)">' +
+                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25" onclick="abrirFoto(this)" ontouchend="abrirFoto(this);event.preventDefault()" oncontextmenu="return false">' +
                     '<div class="info">' +
                         '<span class="cod">CÓDIGO: ' + esc(p.codigo) + '</span>' +
                         '<h3>' + esc(p.nombre) + '</h3>' +
