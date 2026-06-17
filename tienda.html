@@ -80,7 +80,49 @@
         .btn-pedido:hover { background:#1da851; }
         .btn-pedido:disabled { background:#bbb; cursor:not-allowed; }
 
+        /* ===== VENTANA DE REVISIÓN DEL PEDIDO ===== */
+        .modal-bg {
+            position: fixed; inset: 0; z-index: 200; background: rgba(20,27,66,.55);
+            display: flex; align-items: center; justify-content: center; padding: 16px;
+        }
+        .modal-bg[hidden] { display: none; }
+        .modal {
+            background:#fff; border-radius:16px; width:100%; max-width:460px; max-height:88vh;
+            display:flex; flex-direction:column; overflow:hidden; box-shadow:0 18px 50px rgba(0,0,0,.35);
+        }
+        .modal h2 { font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:1px; color:var(--azul); padding:18px 20px 2px; font-size:1.25rem; }
+        .modal-aviso { font-size:.8rem; color:#778; font-weight:300; padding:0 20px 10px; }
+        .modal-items { overflow-y:auto; padding:0 20px; flex:1; }
+        .m-item { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid #eef0f7; }
+        /* Fotos chicas (~1/8 del tamaño de catálogo) */
+        .m-item img { width:46px; height:46px; object-fit:contain; background:#fafafa; border-radius:8px; flex-shrink:0; padding:3px; }
+        .m-info { flex:1; display:flex; flex-direction:column; min-width:0; }
+        .m-nom { font-size:.86rem; font-weight:600; color:var(--azul); }
+        .m-cod { font-size:.72rem; color:#889; }
+        .m-sub { font-family:'Oswald',sans-serif; font-weight:700; color:var(--rojo); font-size:1rem; white-space:nowrap; }
+        .modal-total { padding:14px 20px; font-family:'Oswald',sans-serif; font-size:1.2rem; text-align:right; border-top:2px solid #eef0f7; }
+        .modal-total strong { color:var(--rojo); }
+        .modal-total small { font-size:.7rem; color:#889; }
+        .modal-botones { display:flex; gap:10px; padding:0 20px 20px; }
+        .modal-botones button { flex:1; padding:14px; border:none; border-radius:10px; font-family:'Oswald',sans-serif; font-size:.95rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer; }
+        .btn-cancelar { background:#eef0f7; color:var(--azul); }
+        .btn-cancelar:hover { background:#dfe2f2; }
+        .btn-aceptar { background:#25D366; color:#fff; }
+        .btn-aceptar:hover { background:#1da851; }
+
         @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.15rem; } }
+
+        /* ===== EN CELULAR: tarjetas compactas con foto chica (~1/8 del área) ===== */
+        @media (max-width:600px){
+            .catalogo, .fila { grid-template-columns: 1fr; gap:10px; }
+            .card { flex-direction:row; align-items:stretch; }
+            .card img { width:74px; height:auto; min-height:74px; flex-shrink:0; padding:6px; }
+            .card .info { padding:10px 12px; }
+            .card h3 { font-size:.9rem; }
+            .card .desc { font-size:.74rem; }
+            .card .precio { font-size:1.15rem; margin-top:6px; }
+            .qty { margin-top:8px; }
+        }
     </style>
 </head>
 <body>
@@ -136,6 +178,20 @@
             <span id="totalArticulos">0</span> artículo(s) · Total: <span class="grande">$<span id="totalAbajo">0.00</span></span>
         </div>
         <button class="btn-pedido" id="btnPedido" onclick="enviarPedido()" disabled>📲 Enviar pedido por WhatsApp</button>
+    </div>
+
+    <!-- Ventana de revisión del pedido (antes de enviar a WhatsApp) -->
+    <div class="modal-bg" id="modalPedido" hidden>
+        <div class="modal">
+            <h2>Revisa tu pedido</h2>
+            <p class="modal-aviso">Confirma los productos antes de enviarlos por WhatsApp.</p>
+            <div class="modal-items" id="modalItems"></div>
+            <div class="modal-total">Total: <strong>$<span id="modalTotal">0.00</span> <small>MXN</small></strong></div>
+            <div class="modal-botones">
+                <button class="btn-cancelar" onclick="cancelarPedido()">✖ Cancelar</button>
+                <button class="btn-aceptar" onclick="confirmarPedido()">✓ Aceptar y enviar</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -302,23 +358,51 @@
             document.getElementById('btnPedido').disabled = (articulos === 0);
         }
 
-        /* =================== ENVIAR PEDIDO =================== */
-        function enviarPedido() {
-            var lineas = [], codigos = [], total = 0;
+        /* =================== ENVIAR PEDIDO (con confirmación) =================== */
+        // Arma el pedido a partir de las cantidades actuales
+        function armarPedido() {
+            var lineas = [], codigos = [], items = [], total = 0;
             PRODUCTOS.forEach(function (p) {
                 var v = CANT[p.codigo] || 0;
                 if (v > 0) {
                     var sub = v * p.precio; total += sub;
                     lineas.push('• ' + v + ' x ' + p.nombre + ' (' + p.codigo + ') = $' + fmt(sub));
                     codigos.push(p.codigo);
+                    items.push({ p: p, cant: v, sub: sub });
                 }
             });
-            if (!lineas.length) return;
+            return { lineas: lineas, codigos: codigos, items: items, total: total };
+        }
 
-            var detalle = lineas.join('\n');
+        // Paso 1: muestra la ventana de revisión con fotos chicas
+        function enviarPedido() {
+            var ped = armarPedido();
+            if (!ped.items.length) return;
+            var html = '';
+            ped.items.forEach(function (it) {
+                html += '<div class="m-item">' +
+                    '<img src="' + RUTA_IMAGENES + it.p.img + '" alt="' + esc(it.p.nombre) + '" onerror="this.style.opacity=.25">' +
+                    '<div class="m-info">' +
+                        '<span class="m-nom">' + esc(it.p.nombre) + '</span>' +
+                        '<span class="m-cod">Cód. ' + esc(it.p.codigo) + ' · ' + it.cant + ' x $' + fmt(it.p.precio) + '</span>' +
+                    '</div>' +
+                    '<span class="m-sub">$' + fmt(it.sub) + '</span>' +
+                '</div>';
+            });
+            document.getElementById('modalItems').innerHTML = html;
+            document.getElementById('modalTotal').textContent = fmt(ped.total);
+            document.getElementById('modalPedido').hidden = false;
+        }
+
+        // Paso 2a: ACEPTAR → guarda el pedido y lo abre en WhatsApp
+        function confirmarPedido() {
+            var ped = armarPedido();
+            if (!ped.items.length) { cancelarPedido(); return; }
+
+            var detalle = ped.lineas.join('\n');
             var msg = 'Hola, soy el cliente N° ' + cliente.numero + ' (' + cliente.nombre + ').\n' +
                       'Quiero hacer este pedido:\n\n' + detalle +
-                      '\n\nTOTAL: $' + fmt(total) + ' ' + MONEDA;
+                      '\n\nTOTAL: $' + fmt(ped.total) + ' ' + MONEDA;
 
             // Guarda el pedido en Google (para el historial "Vuelve a pedir")
             var datos = new URLSearchParams();
@@ -326,14 +410,20 @@
             datos.append('numero', cliente.numero);
             datos.append('nombre', cliente.nombre);
             datos.append('detalle', detalle);
-            datos.append('total', total);
-            datos.append('codigos', codigos.join(', '));
+            datos.append('total', ped.total);
+            datos.append('codigos', ped.codigos.join(', '));
             fetch(SCRIPT_URL, { method: 'POST', body: datos })
                 .then(function () { cargarPedidos(); })
                 .catch(function () {});
 
             // Abre WhatsApp con el pedido listo
             window.open('https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(msg), '_blank');
+            document.getElementById('modalPedido').hidden = true;
+        }
+
+        // Paso 2b: CANCELAR → cierra la ventana y regresa al pedido para editarlo
+        function cancelarPedido() {
+            document.getElementById('modalPedido').hidden = true;
         }
 
         function cerrarSesion() {
