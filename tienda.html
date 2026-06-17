@@ -80,6 +80,15 @@
         .btn-pedido:hover { background:#1da851; }
         .btn-pedido:disabled { background:#bbb; cursor:not-allowed; }
 
+        /* ===== LIGHTBOX (foto ampliada al hacer clic) ===== */
+        .lightbox {
+            position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.82);
+            display: flex; align-items: center; justify-content: center; cursor: zoom-out; padding: 20px;
+        }
+        .lightbox[hidden] { display: none; }
+        .lightbox img { max-width: 92vw; max-height: 88vh; object-fit: contain; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,.6); }
+        .card img { cursor: zoom-in; }
+
         /* ===== VENTANA DE REVISIÓN DEL PEDIDO ===== */
         .modal-bg {
             position: fixed; inset: 0; z-index: 200; background: rgba(20,27,66,.55);
@@ -180,6 +189,11 @@
         <button class="btn-pedido" id="btnPedido" onclick="enviarPedido()" disabled>📲 Enviar pedido por WhatsApp</button>
     </div>
 
+    <!-- Lightbox: foto ampliada -->
+    <div class="lightbox" id="lightbox" hidden onclick="cerrarFoto()">
+        <img id="lightboxImg" src="" alt="">
+    </div>
+
     <!-- Ventana de revisión del pedido (antes de enviar a WhatsApp) -->
     <div class="modal-bg" id="modalPedido" hidden>
         <div class="modal">
@@ -246,7 +260,7 @@
             var cant = CANT[p.codigo] || 0;
             return '' +
                 '<div class="card">' +
-                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25">' +
+                    '<img src="' + RUTA_IMAGENES + p.img + '" alt="' + esc(p.nombre) + '" onerror="this.style.opacity=.25" onclick="abrirFoto(this)">' +
                     '<div class="info">' +
                         '<span class="cod">CÓDIGO: ' + esc(p.codigo) + '</span>' +
                         '<h3>' + esc(p.nombre) + '</h3>' +
@@ -425,6 +439,19 @@
         function cancelarPedido() {
             document.getElementById('modalPedido').hidden = true;
         }
+
+        /* =================== LIGHTBOX =================== */
+        function abrirFoto(img) {
+            document.getElementById('lightboxImg').src = img.src;
+            document.getElementById('lightboxImg').alt = img.alt;
+            document.getElementById('lightbox').hidden = false;
+        }
+        function cerrarFoto() {
+            document.getElementById('lightbox').hidden = true;
+        }
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') cerrarFoto();
+        });
 
         function cerrarSesion() {
             sessionStorage.removeItem('jari_cliente');
