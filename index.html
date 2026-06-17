@@ -253,16 +253,18 @@
         </div>
     </section>
 
-    <!-- ===================== CONSULTA DE CLIENTE ===================== -->
+    <!-- ===================== ACCESO DE CLIENTES ===================== -->
     <section id="clientes" class="clientes">
-        <h2 class="titulo-seccion">Consulta de <span>Cliente</span></h2>
+        <h2 class="titulo-seccion">Acceso de <span>Clientes</span></h2>
         <div class="barra-roja"></div>
-        <p class="subtitulo-seccion">Ingresa tu número de cliente y te atendemos por WhatsApp</p>
+        <p class="subtitulo-seccion">Inicia sesión para ver precios y comprar en línea</p>
 
         <div class="form-cliente">
             <label for="numCliente">Número de cliente</label>
             <input type="text" id="numCliente" inputmode="numeric" placeholder="Ej. 1001" autocomplete="off">
-            <button type="button" class="boton boton-rojo" onclick="consultarCliente()">Consultar</button>
+            <label for="passCliente" style="margin-top:6px;">Contraseña</label>
+            <input type="password" id="passCliente" placeholder="Tu contraseña" autocomplete="off">
+            <button type="button" class="boton boton-rojo" onclick="iniciarSesion()">Entrar</button>
             <p id="avisoCliente" class="aviso-cliente"></p>
         </div>
 
@@ -390,21 +392,39 @@
                 });
         }
 
-        function consultarCliente() {
-            var input = document.getElementById('numCliente');
+        function iniciarSesion() {
+            var num = document.getElementById('numCliente').value.trim();
+            var pass = document.getElementById('passCliente').value;
             var aviso = document.getElementById('avisoCliente');
-            var num = input.value.trim();
-            if (num === '') {
-                aviso.textContent = 'Por favor escribe tu número de cliente.';
-                input.focus();
+            if (num === '' || pass === '') {
+                aviso.style.color = '#ffb3b6';
+                aviso.textContent = 'Escribe tu número de cliente y tu contraseña.';
                 return;
             }
-            aviso.textContent = '';
-            var mensaje = 'Hola, soy el cliente N° ' + num + ' y me gustaría hacer una consulta.';
-            window.open('https://wa.me/526672161558?text=' + encodeURIComponent(mensaje), '_blank');
+            aviso.style.color = '#dfe2f2';
+            aviso.textContent = 'Verificando...';
+            var datos = new URLSearchParams();
+            datos.append('accion', 'login');
+            datos.append('numero', num);
+            datos.append('password', pass);
+            fetch(SCRIPT_URL, { method: 'POST', body: datos })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (res.ok) {
+                        sessionStorage.setItem('jari_cliente', JSON.stringify({ numero: num, nombre: res.nombre }));
+                        window.location.href = 'tienda.html';
+                    } else {
+                        aviso.style.color = '#ffb3b6';
+                        aviso.textContent = res.error || 'Número o contraseña incorrectos.';
+                    }
+                })
+                .catch(function () {
+                    aviso.style.color = '#ffb3b6';
+                    aviso.textContent = 'No se pudo conectar. Intenta de nuevo.';
+                });
         }
-        document.getElementById('numCliente').addEventListener('keyup', function (e) {
-            if (e.key === 'Enter') consultarCliente();
+        document.getElementById('passCliente').addEventListener('keyup', function (e) {
+            if (e.key === 'Enter') iniciarSesion();
         });
     </script>
 

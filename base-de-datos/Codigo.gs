@@ -61,6 +61,22 @@ function doPost(e) {
     var d = e.parameter;
     var accion = d.accion || 'registro';
 
+    // ---------- INICIAR SESIÓN (número + contraseña) ----------
+    if (accion === 'login') {
+      var num = (d.numero || '').trim();
+      var pass = (d.password || '');
+      if (!num || !pass) return json({ ok: false, error: 'Faltan datos.' });
+      var ultimoL = hoja.getLastRow();
+      if (ultimoL < 2) return json({ ok: false, error: 'Número o contraseña incorrectos.' });
+      var filasL = hoja.getRange(2, 1, ultimoL - 1, 5).getValues(); // N°, fecha, nombre, correo, contraseña
+      for (var k = 0; k < filasL.length; k++) {
+        if (String(filasL[k][0]) === String(num) && String(filasL[k][4]) === String(pass)) {
+          return json({ ok: true, nombre: filasL[k][2] });
+        }
+      }
+      return json({ ok: false, error: 'Número o contraseña incorrectos.' });
+    }
+
     // ---------- RECUPERAR NÚMERO Y CONTRASEÑA ----------
     if (accion === 'recuperar') {
       var correoR = (d.correo || '').trim().toLowerCase();
