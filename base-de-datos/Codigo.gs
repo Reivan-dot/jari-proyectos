@@ -48,6 +48,46 @@ function autorizar() {
     'Si recibes este correo, el envío de correos ya quedó autorizado. ¡Listo!');
 }
 
+/**
+ * RESPALDO MANUAL: crea una copia de la hoja con la fecha de hoy.
+ * Ejecútala cuando quieras (ej. cada semana) desde el menú de Apps Script.
+ * La copia queda en tu Google Drive con el nombre "Respaldo JARI YYYY-MM-DD".
+ *
+ * Para configurar un respaldo AUTOMÁTICO semanal:
+ *   1. En Apps Script → Reloj (Activadores) → + Añadir activador
+ *   2. Función: respaldar | Tipo de evento: Basado en tiempo | Semana → Lunes 9–10 am
+ */
+function respaldar() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ahora = new Date();
+  var fecha = ahora.getFullYear() + '-' +
+              ('0' + (ahora.getMonth() + 1)).slice(-2) + '-' +
+              ('0' + ahora.getDate()).slice(-2);
+  var nombre = 'Respaldo JARI ' + fecha;
+
+  // Evita duplicar si ya existe un respaldo del mismo día
+  var archivos = DriveApp.getFilesByName(nombre);
+  if (archivos.hasNext()) {
+    Logger.log('Ya existe un respaldo para hoy: ' + nombre);
+    return;
+  }
+
+  var copia = ss.copy(nombre);
+  Logger.log('Respaldo creado: ' + nombre + ' → ' + copia.getUrl());
+
+  // Notifica al dueño de la cuenta por correo
+  var correo = Session.getEffectiveUser().getEmail();
+  MailApp.sendEmail({
+    to: correo,
+    subject: '✅ Respaldo JARI creado: ' + nombre,
+    htmlBody:
+      '<p>Se creó una copia de seguridad de tu hoja de datos JARI.</p>' +
+      '<p><b>Nombre:</b> ' + nombre + '</p>' +
+      '<p><a href="' + copia.getUrl() + '">Abrir respaldo en Google Drive</a></p>' +
+      '<p>— Sistema automático Distribuidora Automotriz JARI</p>'
+  });
+}
+
 function asegurarEncabezados(hoja) {
   if (hoja.getLastRow() === 0) {
     hoja.appendRow([
