@@ -396,10 +396,10 @@
                     ['2. Deja en 0 los productos que no quieres.'],
                     ['3. Guarda el archivo y súbelo con el botón "Cargar mi pedido".'],
                     [''],
-                    ['CÓDIGO', 'NOMBRE', 'PRECIO', 'CANTIDAD']
+                    ['CÓDIGO', 'NOMBRE', 'MEDIDA', 'CANTIDAD']
                 ];
                 PRODUCTOS.forEach(function (p) {
-                    filas.push([p.codigo, p.nombre, p.precio, 0]);
+                    filas.push([p.codigo, p.nombre, p.medida || '', 0]);
                 });
 
                 var ws = XLSXlib.utils.aoa_to_sheet(filas);
