@@ -38,12 +38,18 @@
             padding: 60px 20px;
             background: radial-gradient(circle at 50% 30%, #1c1c1c 0%, var(--negro) 70%);
         }
-        .logo {
-            width: 140px;
-            height: 140px;
-            margin-bottom: 26px;
-            filter: drop-shadow(0 4px 14px rgba(212, 175, 55, 0.35));
+        .logo-card {
+            background: #ffffff;
+            padding: 16px 26px;
+            border-radius: 18px;
+            margin-bottom: 28px;
+            box-shadow: 0 6px 26px rgba(212, 175, 55, 0.28);
             animation: aparecer 1s ease-out;
+        }
+        .logo {
+            display: block;
+            width: min(380px, 78vw);
+            height: auto;
         }
         h1 {
             font-family: 'Cinzel', serif;
@@ -126,27 +132,10 @@
 
     <!-- ===================== PORTADA ===================== -->
     <header class="hero">
-        <!--
-          LOGO: emblema dibujado en código (SVG). Para usar tu propia imagen,
-          sube "logo.png" al repositorio y reemplaza este bloque <svg>…</svg> por:
-              <img class="logo" src="logo.png" alt="Logo JARI">
-        -->
-        <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Logo JARI">
-            <defs>
-                <linearGradient id="oro" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#f4d97b"/>
-                    <stop offset="50%" stop-color="#D4AF37"/>
-                    <stop offset="100%" stop-color="#b8860b"/>
-                </linearGradient>
-            </defs>
-            <circle cx="100" cy="100" r="92" fill="none" stroke="url(#oro)" stroke-width="4"/>
-            <circle cx="100" cy="100" r="80" fill="none" stroke="url(#oro)" stroke-width="1.5" opacity="0.6"/>
-            <path d="M30 100 q 18 -16 38 0 q -18 10 -38 0 Z" fill="url(#oro)"/>
-            <path d="M170 100 q -18 -16 -38 0 q 18 10 38 0 Z" fill="url(#oro)"/>
-            <text x="100" y="118" text-anchor="middle"
-                  font-family="Cinzel, serif" font-size="56" font-weight="700"
-                  fill="url(#oro)" letter-spacing="2">JARI</text>
-        </svg>
+        <!-- Logo real de la empresa -->
+        <div class="logo-card">
+            <img class="logo" src="logojari.jpg" alt="Distribuidora Automotriz JARI">
+        </div>
 
         <h1>Distribuidora Automotriz JARI</h1>
         <div class="linea"></div>
