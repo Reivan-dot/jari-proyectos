@@ -124,6 +124,20 @@
         .btn-aceptar { background:#25D366; color:#fff; }
         .btn-aceptar:hover { background:#1da851; }
 
+        /* ===== EXISTENCIA EN TARJETA ===== */
+        .card .exist { font-size:.72rem; font-weight:600; margin-top:5px; }
+        .card .exist-ok { color:#1a9e4a; }
+        .card .exist-no { color:var(--rojo); }
+
+        /* ===== PANTALLA DE CUENTA PENDIENTE ===== */
+        .pendiente-wrap { display:flex; align-items:center; justify-content:center; min-height:calc(100vh - 70px); padding:30px 20px; }
+        .pendiente-box { background:#fff; border-radius:18px; box-shadow:0 10px 36px rgba(27,36,86,.13); max-width:420px; width:100%; padding:40px 32px; text-align:center; }
+        .pendiente-box .ico { font-size:3rem; margin-bottom:14px; }
+        .pendiente-box h2 { font-family:'Oswald',sans-serif; font-size:1.4rem; color:var(--azul); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+        .pendiente-box p { color:#556; font-size:.9rem; line-height:1.6; margin-bottom:10px; }
+        .pendiente-box .btn-salir { background:var(--rojo); border:none; color:#fff; padding:12px 28px; border-radius:8px; font-family:'Oswald',sans-serif; font-size:1rem; letter-spacing:1px; text-transform:uppercase; cursor:pointer; margin-top:18px; }
+        .pendiente-box .btn-salir:hover { background:var(--rojo-osc); }
+
         @media (max-width:480px){ .total-box .val{ font-size:1.3rem; } .cabecera h1{ font-size:1.15rem; } }
 
         /* ===== EN CELULAR: tarjetas compactas con foto chica (~1/8 del área) ===== */
@@ -150,6 +164,17 @@
         <div class="cliente-box">
             <div class="nombre" id="nombreCliente">Cliente<small id="numeroCliente"></small></div>
             <button class="btn-salir" onclick="cerrarSesion()">Salir</button>
+        </div>
+    </div>
+
+    <!-- Pantalla: cuenta sin N° Cliente asignado (sin acceso a precios) -->
+    <div class="pendiente-wrap" id="pantallaPendiente" hidden>
+        <div class="pendiente-box">
+            <div class="ico">🔒</div>
+            <h2>Cuenta pendiente de activación</h2>
+            <p>Hola, <strong id="pendienteNombre"></strong>. Tu registro fue recibido, pero aún no tienes un número de cliente asignado.</p>
+            <p>Un asesor de <strong>Distribuidora Automotriz JARI</strong> revisará tu cuenta y te asignará acceso. Puedes comunicarte por WhatsApp si tienes dudas.</p>
+            <button class="btn-salir" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
     </div>
 
@@ -228,6 +253,7 @@
         /* =================== SESIÓN =================== */
         var cliente = null;
         try { cliente = JSON.parse(sessionStorage.getItem('jari_cliente')); } catch (e) {}
+
         if (!cliente || !cliente.nombre) {
             window.location.href = 'index.html#clientes';
         } else {
@@ -235,6 +261,13 @@
             var etiqueta = 'Usuario N° ' + cliente.numero;
             if (cliente.numCliente) etiqueta += ' · Cliente N° ' + cliente.numCliente;
             document.getElementById('numeroCliente').textContent = etiqueta;
+
+            if (!cliente.numCliente) {
+                // Sin N° Cliente: mostrar pantalla de espera, no cargar precios
+                document.getElementById('pendienteNombre').textContent = cliente.nombre;
+                document.getElementById('pantallaPendiente').hidden = false;
+                document.getElementById('estadoCarga').hidden = true;
+            }
         }
 
         var PRODUCTOS = [];        // catálogo completo
@@ -245,13 +278,23 @@
         function esc(s) { return String(s == null ? '' : s).replace(/"/g, '&quot;'); }
 
         /* =================== CARGAR CATÁLOGO =================== */
-        fetch(SCRIPT_URL + '?accion=catalogo')
-            .then(function (r) { return r.json(); })
-            .then(function (res) {
-                PRODUCTOS = (res.ok && res.productos && res.productos.length) ? res.productos : FALLBACK;
-                arrancar();
-            })
-            .catch(function () { PRODUCTOS = FALLBACK; arrancar(); });
+        if (cliente && cliente.numCliente) {
+            // Registrar visita a la tienda
+            (function () {
+                var v = new URLSearchParams();
+                v.append('accion', 'registrarVisita');
+                v.append('numero', cliente.numero);
+                fetch(SCRIPT_URL, { method: 'POST', body: v }).catch(function () {});
+            })();
+
+            fetch(SCRIPT_URL + '?accion=catalogo')
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    PRODUCTOS = (res.ok && res.productos && res.productos.length) ? res.productos : FALLBACK;
+                    arrancar();
+                })
+                .catch(function () { PRODUCTOS = FALLBACK; arrancar(); });
+        }
 
         function arrancar() {
             POR_CODIGO = {};
@@ -273,6 +316,10 @@
                         '<h3>' + esc(p.nombre) + '</h3>' +
                         '<p class="desc">' + esc(p.descripcion || '') + '</p>' +
                         '<div class="precio">$' + fmt(p.precio) + ' <span class="medida">/ ' + esc(p.medida) + '</span></div>' +
+                        (p.existencia !== null && p.existencia !== undefined
+                            ? '<div class="exist ' + (p.existencia > 0 ? 'exist-ok' : 'exist-no') + '">' +
+                              (p.existencia > 0 ? '✓ Existencia: ' + p.existencia : '✗ Sin existencia') + '</div>'
+                            : '') +
                         '<div class="qty">' +
                             '<button onclick="cambiar(\'' + esc(p.codigo) + '\',-1)">−</button>' +
                             '<input type="number" min="0" data-cod="' + esc(p.codigo) + '" value="' + cant + '" ' +

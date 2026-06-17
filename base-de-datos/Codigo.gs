@@ -6,10 +6,14 @@
  *
  * Cómo usarlo: ver el archivo INSTRUCCIONES.md
  *
- * Columnas de la hoja (en este orden):
- * N° Cliente | Fecha de registro | Nombre | Correo | Contraseña | Verificado |
+ * Columnas de la hoja Clientes (en este orden):
+ * N° Usuario | Fecha de registro | Nombre | Correo | Contraseña | Verificado |
  * Teléfono | Dirección | Código Postal | Ciudad | Estado |
- * Productos de interés | Qué espera al contactarnos | Token
+ * Productos de interés | Qué espera al contactarnos | Token | Perfil | N° Cliente |
+ * Vendedor | Frecuencia de entradas | Frecuencia de compras
+ *
+ * Columnas de la hoja Productos:
+ * codigo | nombre | descripcion | precio | medida | imagen | existencia
  */
 
 function json(obj) {
@@ -35,7 +39,8 @@ function asegurarEncabezados(hoja) {
     hoja.appendRow([
       'N° Usuario', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
       'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
-      'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil', 'N° Cliente'
+      'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil', 'N° Cliente',
+      'Vendedor', 'Frecuencia de entradas', 'Frecuencia de compras'
     ]);
   }
 }
@@ -85,6 +90,24 @@ function doPost(e) {
       return json({ ok: false, error: 'Número o contraseña incorrectos.' });
     }
 
+    // ---------- REGISTRAR VISITA (incrementa Frecuencia de entradas) ----------
+    if (accion === 'registrarVisita') {
+      var numVis = (d.numero || '').trim();
+      if (numVis) {
+        var ultimoVis = hoja.getLastRow();
+        if (ultimoVis >= 2) {
+          var filasVis = hoja.getRange(2, 1, ultimoVis - 1, 18).getValues();
+          for (var fv = 0; fv < filasVis.length; fv++) {
+            if (String(filasVis[fv][0]).trim() === numVis) {
+              hoja.getRange(fv + 2, 18).setValue((Number(filasVis[fv][17]) || 0) + 1);
+              break;
+            }
+          }
+        }
+      }
+      return json({ ok: true });
+    }
+
     // ---------- GUARDAR PEDIDO (para el historial del cliente) ----------
     if (accion === 'guardarPedido') {
       var hojaPed = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Pedidos');
@@ -96,6 +119,20 @@ function doPost(e) {
         new Date(), d.numero || '', d.nombre || '',
         d.detalle || '', Number(d.total) || 0, d.codigos || ''
       ]);
+      // Incrementar Frecuencia de compras (columna S = 19)
+      var numPed = (d.numero || '').trim();
+      if (numPed) {
+        var ultimoPed = hoja.getLastRow();
+        if (ultimoPed >= 2) {
+          var filasPed = hoja.getRange(2, 1, ultimoPed - 1, 19).getValues();
+          for (var fp = 0; fp < filasPed.length; fp++) {
+            if (String(filasPed[fp][0]).trim() === numPed) {
+              hoja.getRange(fp + 2, 19).setValue((Number(filasPed[fp][18]) || 0) + 1);
+              break;
+            }
+          }
+        }
+      }
       return json({ ok: true });
     }
 
@@ -173,8 +210,8 @@ function doGet(e) {
     var ultimo = sh.getLastRow();
     var productos = [];
     if (ultimo >= 2) {
-      // Columnas: codigo | nombre | descripcion | precio | medida | imagen
-      var vals = sh.getRange(2, 1, ultimo - 1, 6).getValues();
+      // Columnas: codigo | nombre | descripcion | precio | medida | imagen | existencia
+      var vals = sh.getRange(2, 1, ultimo - 1, 7).getValues();
       for (var i = 0; i < vals.length; i++) {
         var r = vals[i];
         if (r[0] === '' && r[1] === '') continue; // salta filas vacías
@@ -184,7 +221,8 @@ function doGet(e) {
           descripcion: r[2],
           precio: Number(r[3]) || 0,
           medida: r[4],
-          img: String(r[5])
+          img: String(r[5]),
+          existencia: r[6] !== '' && r[6] !== null ? Number(r[6]) : null
         });
       }
     }
