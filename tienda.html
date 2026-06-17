@@ -213,8 +213,8 @@
     <div class="divisor" id="divisorCatalogo"><hr></div>
 
     <!-- SECCIÓN: Catálogo completo -->
-    <div class="sec-catalogo">
-        <div class="seccion-titulo">📦 Catálogo completo</div>
+    <div class="sec-catalogo" id="secCatalogo">
+        <div class="seccion-titulo" id="tituloCatalogo">📦 Catálogo completo</div>
         <div class="seccion-sub">Todos los productos disponibles.</div>
     </div>
     <div class="catalogo" id="catalogo"></div>
@@ -365,11 +365,16 @@
         }
 
         /* =================== CATÁLOGO COMPLETO (con buscador) =================== */
+        // Recuerda qué secciones de recomendación tienen contenido, para
+        // poder volver a mostrarlas cuando se borra la búsqueda.
+        var HAY_PEDIDOS = false, HAY_SUGERIDOS = false;
+
         function render() {
             var q = (document.getElementById('buscar').value || '').toLowerCase().trim();
+            var buscando = q.length > 0;
             var html = '';
             PRODUCTOS.forEach(function (p) {
-                if (q) {
+                if (buscando) {
                     var enNombre = String(p.nombre || '').toLowerCase().indexOf(q) >= 0;
                     var enCodigo = String(p.codigo || '').toLowerCase().indexOf(q) >= 0;
                     var enDesc   = String(p.descripcion || '').toLowerCase().indexOf(q) >= 0;
@@ -377,8 +382,23 @@
                 }
                 html += tarjeta(p);
             });
-            document.getElementById('catalogo').innerHTML = html || '<p style="padding:20px;color:#778;">Sin resultados para "' + q + '".</p>';
-            // divisorCatalogo siempre visible (se muestra desde HTML)
+            document.getElementById('catalogo').innerHTML = html ||
+                '<p style="padding:20px;color:#778;">Sin resultados para "' + esc(q) + '".</p>';
+
+            // Mientras se busca, ocultar las secciones de recomendación y mostrar
+            // solo los resultados. Al borrar la búsqueda, restaurarlas.
+            mostrar('secPedidos',       !buscando && HAY_PEDIDOS);
+            mostrar('secSugeridos',     !buscando && HAY_SUGERIDOS);
+            mostrar('divisorSugeridos', !buscando && HAY_PEDIDOS && HAY_SUGERIDOS);
+            mostrar('divisorCatalogo',  !buscando);
+            // El título "📦 Catálogo completo" se cambia por "Resultados" al buscar
+            document.getElementById('tituloCatalogo').textContent =
+                buscando ? '🔎 Resultados de la búsqueda' : '📦 Catálogo completo';
+        }
+
+        function mostrar(id, visible) {
+            var el = document.getElementById(id);
+            if (el) el.hidden = !visible;
         }
 
         /* =================== SUGERIDOS POR PERFIL =================== */
@@ -423,10 +443,11 @@
             prods.forEach(function (p) { html += tarjeta(p); });
             if (!html) return;
             document.getElementById(idFila).innerHTML = html;
-            document.getElementById(idSeccion).hidden = false;
-            // muestra el divisor que precede a esta sección si existe
-            var div = document.getElementById(idSeccion.replace('sec', 'divisor'));
-            if (div) div.hidden = false;
+            // recuerda que esta sección tiene contenido (para la búsqueda)
+            if (idSeccion === 'secPedidos') HAY_PEDIDOS = true;
+            if (idSeccion === 'secSugeridos') HAY_SUGERIDOS = true;
+            // si no se está buscando, muéstrala ya; render() respeta el estado de búsqueda
+            render();
         }
 
         /* =================== CANTIDADES (compartidas en todas las secciones) =================== */
