@@ -9,24 +9,39 @@ ahí, la tienda se actualiza sola (en uno o dos minutos).
 1. Abre la **misma hoja de Google** donde se guardan los clientes (Clientes JARI).
 2. Abajo, crea una **pestaña nueva** y nómbrala exactamente: **`Productos`**
    (con P mayúscula).
-3. En esa pestaña, pon estos títulos en la **fila 1**, una por columna (A a G):
+3. En esa pestaña, pon estos títulos en la **fila 1**, una por columna (A a K):
 
-   | A | B | C | D | E | F | G |
-   |---|---|---|---|---|---|---|
-   | codigo | nombre | descripcion | precio | medida | imagen | existencia |
+   | A | B | C | D | E | F | G | H | I | J | K |
+   |---|---|---|---|---|---|---|---|---|---|---|
+   | codigo | nombre | descripcion | precio | medida | imagen | existencia | peso | medidas | oferta | precio_oferta |
 
 4. Pega debajo TODOS tus productos (puedes copiar y pegar directo desde tu Excel
    PRECIOS.xlsx). Ejemplo:
 
-   | codigo | nombre | descripcion | precio | medida | imagen | existencia |
-   |--------|--------|-------------|--------|--------|--------|-----------|
-   | 668 | FARO HORIZONTAL | Faro LED rect blanco 6 CREE LED | 45 | PAR | 668.png | 12 |
-   | 664 | AROMA CORCHO | Aroma corcho cherry en lata | 37 | PZ | 664.png | 0 |
+   | codigo | nombre | descripcion | precio | medida | imagen | existencia | peso | medidas | oferta | precio_oferta |
+   |--------|--------|-------------|--------|--------|--------|-----------|------|---------|--------|--------------|
+   | 668 | FARO HORIZONTAL | Faro LED rect blanco 6 CREE LED | 45 | PAR | 668.png | 12 | 0.8 | 25x18x10 | remate | 35 |
+   | 664 | AROMA CORCHO | Aroma corcho cherry en lata | 37 | PZ | 664.png | 0 | 0.2 | 8x8x12 |  |  |
 
    > **columna G `existencia`:** escribe la cantidad que tienes en almacén.
    > - Si pones un número mayor a 0, la tarjeta muestra **"✓ Existencia: 12"** en verde.
    > - Si pones **0**, muestra **"✗ Sin existencia"** en rojo.
    > - Si dejas la celda **vacía**, no se muestra nada (úsalo para productos sin control de stock).
+
+   > **columna H `peso`:** peso del producto en **kilogramos** (ej. `0.8`). Se usa para
+   > estimar el flete. Puedes dejarla vacía si aún no lo sabes.
+
+   > **columna I `medidas`:** medidas de la caja en **centímetros**, en formato
+   > `largo x ancho x alto` (ej. `25x18x10`). Se usa para el **peso volumétrico** del flete.
+
+   > **columna J `oferta`:** marca el producto en una promoción escribiendo una de estas
+   > palabras: **`remate`**, **`relampago`** o **`mes`** (también acepta "Remates",
+   > "Relámpago", "Oferta del mes"…). Aparecerá en la sección correspondiente con su
+   > insignia. Déjala vacía si el producto no está en oferta.
+
+   > **columna K `precio_oferta`:** precio rebajado (ej. `35`). Si es **menor** al precio
+   > normal, la tarjeta muestra el precio normal tachado y el de oferta en rojo, y ese es
+   > el precio que se cobra. Si la dejas vacía, solo se usa para agrupar (sin descuento).
 
 5. Vuelve a publicar el Apps Script una vez (**Implementar → Administrar
    implementaciones → ✏️ Editar → Versión: Nueva versión → Implementar**).
