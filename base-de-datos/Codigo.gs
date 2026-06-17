@@ -35,7 +35,7 @@ function asegurarEncabezados(hoja) {
     hoja.appendRow([
       'N° Cliente', 'Fecha de registro', 'Nombre', 'Correo', 'Contraseña', 'Verificado',
       'Teléfono', 'Dirección', 'Código Postal', 'Ciudad', 'Estado',
-      'Productos de interés', 'Qué espera al contactarnos', 'Token'
+      'Productos de interés', 'Qué espera al contactarnos', 'Token', 'Perfil'
     ]);
   }
 }
@@ -68,13 +68,28 @@ function doPost(e) {
       if (!num || !pass) return json({ ok: false, error: 'Faltan datos.' });
       var ultimoL = hoja.getLastRow();
       if (ultimoL < 2) return json({ ok: false, error: 'Número o contraseña incorrectos.' });
-      var filasL = hoja.getRange(2, 1, ultimoL - 1, 5).getValues(); // N°, fecha, nombre, correo, contraseña
+      // Lee hasta la columna O (15) = Perfil. (N°, fecha, nombre, correo, contraseña ... perfil)
+      var filasL = hoja.getRange(2, 1, ultimoL - 1, 15).getValues();
       for (var k = 0; k < filasL.length; k++) {
         if (String(filasL[k][0]) === String(num) && String(filasL[k][4]) === String(pass)) {
-          return json({ ok: true, nombre: filasL[k][2] });
+          return json({ ok: true, nombre: filasL[k][2], perfil: String(filasL[k][14] || '') });
         }
       }
       return json({ ok: false, error: 'Número o contraseña incorrectos.' });
+    }
+
+    // ---------- GUARDAR PEDIDO (para el historial del cliente) ----------
+    if (accion === 'guardarPedido') {
+      var hojaPed = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Pedidos');
+      if (!hojaPed) hojaPed = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Pedidos');
+      if (hojaPed.getLastRow() === 0) {
+        hojaPed.appendRow(['Fecha', 'N° Cliente', 'Nombre', 'Detalle', 'Total', 'Códigos']);
+      }
+      hojaPed.appendRow([
+        new Date(), d.numero || '', d.nombre || '',
+        d.detalle || '', Number(d.total) || 0, d.codigos || ''
+      ]);
+      return json({ ok: true });
     }
 
     // ---------- RECUPERAR NÚMERO Y CONTRASEÑA ----------
@@ -167,6 +182,52 @@ function doGet(e) {
     }
     return json({ ok: true, productos: productos });
   }
+
+  // ---------- CÓDIGOS SUGERIDOS POR PERFIL ----------
+  if (p.accion === 'sugerencias') {
+    var perfil = (p.perfil || '').trim().toLowerCase();
+    if (!perfil) return json({ ok: true, codigos: [] });
+    var shPer = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Perfiles');
+    if (!shPer) return json({ ok: false, error: 'No existe una hoja llamada "Perfiles".' });
+    var ultPer = shPer.getLastRow();
+    var codigos = [];
+    if (ultPer >= 2) {
+      // Columnas: perfil | codigos (códigos separados por coma)
+      var valsPer = shPer.getRange(2, 1, ultPer - 1, 2).getValues();
+      for (var j = 0; j < valsPer.length; j++) {
+        if (String(valsPer[j][0]).trim().toLowerCase() === perfil) {
+          String(valsPer[j][1]).split(',').forEach(function (c) {
+            c = c.trim(); if (c) codigos.push(c);
+          });
+        }
+      }
+    }
+    return json({ ok: true, codigos: codigos });
+  }
+
+  // ---------- CÓDIGOS QUE EL CLIENTE YA PIDIÓ ANTES ----------
+  if (p.accion === 'pedidos') {
+    var numClt = (p.numero || '').trim();
+    if (!numClt) return json({ ok: true, codigos: [] });
+    var shPed = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Pedidos');
+    if (!shPed) return json({ ok: true, codigos: [] });
+    var ultPed = shPed.getLastRow();
+    var vistos = {}, listaCod = [];
+    if (ultPed >= 2) {
+      // Columnas: Fecha | N° Cliente | Nombre | Detalle | Total | Códigos
+      var valsPed = shPed.getRange(2, 2, ultPed - 1, 5).getValues(); // desde col B
+      for (var m = valsPed.length - 1; m >= 0; m--) { // del más reciente al más viejo
+        if (String(valsPed[m][0]).trim() === numClt) {
+          String(valsPed[m][4]).split(',').forEach(function (c) {
+            c = c.trim();
+            if (c && !vistos[c]) { vistos[c] = true; listaCod.push(c); }
+          });
+        }
+      }
+    }
+    return json({ ok: true, codigos: listaCod });
+  }
+
   if (p.accion === 'verificar' && p.token) {
     var hoja = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
     var ultimo = hoja.getLastRow();
